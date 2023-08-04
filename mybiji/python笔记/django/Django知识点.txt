@@ -1,0 +1,2731 @@
+adjango框架开发流程
+1. 新建工程django-admin startproject helloapp
+2.修改工程（此处省略....）
+3.运行工程py manage.py runserver
+django流程2
+2-1【修改工程】创建一个具体的应用
+2-2【修改工程】修改应用的views.py:对URL的具体响应功能
+2-3【修改工程】修改URL路由：指定URL与响应之间的关系
+
+
+
+
+django的URL路由流程
+Django查找全局urlpatterns变量（urls.py）
+按顺序对urlpatterns每个元素进行匹配
+找到第一个匹配时停止查找，执行函数
+没有找到或匹配到就进行错误处理
+几个相关函数：
+path( )
+re_path( )  
+include( )
+
+
+
+djangoURL路由配置
+全局中的urls.py，或者加上应用中的urls.py(子urls.py)
+全局路由再拼接子路由
+
+
+
+
+
+django的views的响应类型
+1. HTTPResponse 类及子类
+2.jsonResponse类
+3.StreamingHttpResponse类
+4.FileResponse类
+
+
+
+HTTPResponse类参数
+(content,content_type=none,status,charset)
+content      返回的字符串或者文本信息
+content_type   返回内容类型（是字符串呢，是图片呢）
+status    返回响应状态码
+charset    返回响应的字符集
+
+
+jsonResponse类
+jsonResponse（data）
+data是字典类型，返回json的类型的数据
+
+
+StreamingHttpResponse类
+StreamingHttpResponse（streaming_content）
+（streaming_content）返回流类型的数据信息，内容的迭代器形式，以内容流的方式响应
+
+
+FileResponse类
+FileResponse(stream)   返回一个文件，stream以流形式打开后的文件
+FileResponse有两个特点标记,是MIME类型的标准定义
+content-type   指定一段信息的文件类型
+content-disposition  指定下载文件的默认名称
+
+
+
+以上视频https://www.icourse163.org/learn/BIT-1001871002
+tid=1001963002#/learn/announce
+------------------------------------------------------------------------------------------------
+
+
+模板Tmeplates
+配置在settings中templates列表中配置
+
+
+模板查找
+查找函数
+get_template( template_name) ->template类
+template_name  待查模板的名称
+在模板目录列表中，依次查找某个模板，直到找到并返回template类
+若未找到模板 ，则抛出templateDoesnotExist异常
+
+select_template( template_name_list) ->template类
+template_name_list  待查找模版的名称
+与get_template相似，模板目录列表中，依次查找某个模板，直到找到第一个并返回template类，未找到抛出templateDoesnotExist异常。
+但是template_name_list是一个模板列表，可以同时查找多个模板，但只返回第一个模板
+
+
+模板的渲染
+模板文件被表达为template类型，之后与数据进行加工，渲染为可以响应给用户的，既有模板表现又有数据内涵的字符串，该过程就是渲染。
+template类用render方法进行渲染，之后生成html相关的字符串
+template.render（context，request）
+context   字典类型，用于加载到模板中的内容
+
+
+
+模板使用步骤
+1. 先找到模板，定义一个template类
+2.  进行渲染
+
+
+
+
+
+
+models 使用了ORM技术（与数据库进行联系）ORM可以理解为翻译机
+迁移数据: py manger.py makemigrations  创建迁移对象 00001.py
+py manger.py  migrate 执行迁移
+--object Relational Mapping 对象关系映射
+--将业务逻辑进行了一个解耦合
+-object.save()   直接保存至数据库
+-object.delect()  直接删除一个对象
+代替了( sql语句 )
+实现了对数据库的增删改查
+（save，object.all(), object.get(pk=), delect()）
+
+
+
+换数据库
+比如对于mysql
+‘ENGINE’ : 'django.db.。。' ，
+‘NAME’: 'DJANGO' ，    #数据库名称
+'USER' : 'root'，
+'PASSWORD' ：'187563'，
+'HOST' : '127.0.0.1'，    #或者losthost ， 即将本机数据库作为服务器
+‘PORT’: '3306'，  #端口
+伪装
+在__inti__中伪装;
+
+
+
+定义模型models
+继承自Models  
+class  meta：源信息    可以修改表名
+定义字段:字段类型 CharField    IntgerField  .....，字段约束  max_length    default    unique .......
+然后
+映射到库中，迁移
+
+
+
+
+
+
+
+对数据库的查询所用的过滤器函数（objects）
+.....objects.all（）  返回所有数据     ->QuerySet类型
+.....objects.filter（）  返回符合条件的数据
+.....objects.exclude（）  过滤掉符合条件的数据
+......objects.order_by()   排序
+......objects.values()   一条数据就是一个字典，返回一个列表
+以上这几个都是返回一个结果集，有多个数据
+
+
+
+
+查询返回单个数据的如下：
+.....objects.get（）   返回一个满足条件的对象，如果没有找到符合条件的对象，会引发模型类DoesNotExist异常，如果找到多个，或引发模型类MultiObjectsReturned异常
+.....objects.all().first（）  返回 查询集中的第一个对象
+.....objects.all().last（）返回查询集中最后一个对象
+count（） 返回当前查询集中的对象个数
+exists（） 判断查询集中是否有数据，如果有数据则返回True，没有反之
+隐藏bug   因为排序，first 和last 可能会 获取到一个元素，所以要显式进行排序再用
+
+
+
+
+切片
+QuerySet[5,15]   ORM将其转化为sql语句，相当于sql中的limit和offset
+查询的时候不会查全部，已经切割了
+就相当于.....objects.all()[5,15],查的时候不是把全部查出来放在内存中，而是查已经切好的
+下标不能是负数
+
+缓存集
+查询集有缓存，数据不是说调一次all，exclude,filter就 去数据库里查一次，是在调用对象属性的时候，去for 循环的时候，或者单个对象去调属性的时候才去查的， 不管调用多少次filter都不会去查，只有调用单个对象属性的时候才去查数据库，也叫懒查询
+懒查询->优化我们的结构与查询
+
+
+
+字段查询
+对sql中where 的实现，作为filter（），exclude（），get（）的参数
+语法： 属性名称__比较运算符=值
+
+查询条件
+属性__运算符=值
+运算符：gt 大于，lt 小于，gte 大于等于，lte 小于等于，in，contains   类似于like，startswitch 以...开始   也是like，  endswitch  以..结束 也是like，  exact 精确等于  与等号 ‘=’ 相同。
+前面同时添加 i， （ignore）iexact ，istartswitch ，iendswitch  ，icontains代表忽略大小写的匹配
+时间的运算符：year，month，day，hour，minute，second
+例子：filter（lasttime__year=2018）
+django查询条件有时区问题
+解决方案：
+1.关闭django中自定义的时区。(settings ->USE_TZ改为False)
+2.在数据库中创建对应的时区表(比较麻烦)  不懂/。。。。
+
+
+查询快键
+pk：代表主键，filter（pk=1）
+
+
+跨关系查询：
+模型类名__属性名__比较运算符，实际上就是处理的数据库中的join
+例子：
+grade=Grade.objects.filter(student__scontend__contains='楚人美')
+描述中带有 ‘楚人美’  这三个字的数据属于哪个班级
+
+聚合函数
+使用aggregate（）函数返回聚合函数的值
+Avg 平均
+Count  计数
+Max 最大
+Min 最小
+Sum 求和
+......
+例子：Student.objects.aggregate(Avg('s_age'))  求出平均年龄
+
+
+
+
+F对象（对自己的一些属性进行查询可以用F对象）
+可以使用模型的A属性和B属性进行比较（自己的两个属性进行比较)
+可以获取我们属性的值   F（c_girl_num）
+可以实现一个模型不同属性的运算操作     c_boy_num__gte=F('c_girl_num')-15
+可以实现算术运算        F（c_girl_num）-15
+
+
+Q对象
+可以对条件进行封装，封装之后，可以支持逻辑运算（与 & 或  |   非 ~ ）
+例子
+company=Company.objects.filter(c_boy_num__gt=5).filter(c_girl_num__gt=10)
+即获取男生人数大于5，女生人数大于10的公司
+可以用Q来修改为如下
+company=Company.objects.filter(Q(c_boy_num__gt=5) & Q(c_girl_num__gt=5))
+
+
+
+
+模型成员
+一个应用如果不在INSTALLED_APPS注册，则没法迁移
+
+
+显性属性  开发者手动写的
+隐性属性  开发者没写，ORM自动生成的。如果把隐形属性手动声明了，则系统就不会为你产生隐形属性了
+
+当没有手动书写时
+animals=Animal.objects.all()  可以来获取
+当手动声明了。比如在models.py 的相应类中声明为：a_m=models.Manager()
+自己指定了一个models管理者，则用objects就无法使用，应使用
+animals=Animal.a_m.all()  来获取
+
+
+
+自定义管理器类manager（继承于原来的管理类）
+
+自定义模型管理器的作用：
+可以向管理器中添加额外的方法
+修改管理器返回的原始查询集
+提供创建对象的方式
+
+例子：
+class AnimalManager（models.Manager）:
+      def get_queryset():
+
+class Animal（models.Model）：
+	a_name=models.cha......
+
+	a_m=AnimalManager
+
+该AnimalManager类继承了之前系统的manager类，然后a_m=AnimalManager就自己创建了管理。就可以通过animals=Animal.a_m.all()  来获取数据，然后AnimalManager 中新增的方法也可以使用。
+
+
+
+objects
+查询句柄-> objects -> 隐性属性  ，  Manager实例     ，操作都封装在这里->获取查询结果集Queryset -> all(),  filter() ,  exclude()  ,  oreder_by()  ,   values() ,    切片        
+
+
+
+创建对象
+-- 直接实例化，设置属性
+-- 创建对象，传入属性
+--使用Model.objects.create（）
+--自己封装类方法创建
+--在Manage中封装方法创建
+
+
+
+
+
+
+
+
+
+
+状态码
+2xx 请求成功 
+3xx 重定向或转发 
+4xx 客户端错了
+5xx 服务器错了，开发人员最不想看到的
+
+
+
+
+
+
+模板（其实就是HTML）
+在django框架中，模板是可以帮助开发者快速生成呈现给用户页面的工具
+
+模板处理的两个过程
+1.加载 loader.get_template
+2.渲染 render
+
+
+模板主要有两个部分
+1.静态HTML
+2.动态插入的代码段 或者说模板语言  例如 :{{    }} 
+
+
+模板中的变量：
+视图传递给模板的数据
+遵循标识符的规则
+语法{{  var  }}
+如果变量不存在，则插入空字符串
+
+模板   点语法
+1.调用属性   {{ student.s_name }} ，s_name为一个属性
+2.调用方法    {{ student.get_student }} ，get_student为一个方法
+3.字典操作   {{ dict_name.name }}=zhaoxi，dict_name为一个字典{ 'name': 'zhaoxi'}
+4.索引  {{  students.1.s_name  }}，students为students=Student.objects.all()
+
+模板中的小弊端，调用对象方法的时候，不太容易传递参数
+
+
+模板的标签
+----------------------------------------------------------------------------------
+语法 {% tag %}
+作用：
+1. 加载外部传入的变量   类似 {{  }}
+2. 在输出中创建文本    对于{% for student in students %}，创建了student变量
+3. 可以写控制循环或者逻辑 比如{% for student in students %} for循环
+
+if
+格式：
+{% if 表达式 %}
+       语句
+{% endif %}
+
+{% if 表达式 %}
+       语句
+{% else %}
+       语句
+{% endif  %}
+
+{% if 表达式 %}
+       语句
+{% elif 表达式 %}
+        语句
+{% endif  %}
+
+
+
+for
+{% for 变量 in 列表 %}
+           语句1
+      {% empty %}
+           语句2
+{% endfor %}
+当列表为空或者不存在时，执行empty后的语句
+
+forloop
+循环器：循环状态的记录
+{{ forloop.counter }} 1,2,3.......表示当前是第几次循环，从1开始数数
+{{ forloop.counter0 }} 0,1,2......表示当前是第几次循环，从0开始数数
+{{ forloop.revcounter }}  表示倒着数，到1停
+{{ forloop.revcounter0 }}  倒着，到0停
+{{ forloop.first}}     是否是第一个，布尔值
+{{ forloop.last }}     是否是最后一个，布尔值
+
+
+
+
+
+
+注释
+
+单行注释
+{# 被注释掉的内容 #}
+多行注释
+{% comment %}
+	内容
+{% endcomment %}
+
+
+18:28 2019/8/2318:28 2019/8/23
+
+乘除（.......乘除用这一个式子，除5相当于乘1/5）
+{% widthratio 数 分母 分子 %}
+   
+整除
+{% if num|divisibleby:2 %}
+
+ifequal  如果相等
+   	{% ifequal value1 value2  %}
+		语句
+	{% endifequal %}
+ifnotequal 如果不相等
+
+标签特性
+-------------------
+{%  %}标识符
+标签分为单标签和成对的标签，
+成对的标签不能省略，开始标签和结束标签
+
+
+
+过滤器：{{ var|过滤器}}
+------------------------------
+ {{ p.page| add:4 }}  加法过滤器，p.page=p.page+4
+{{ p.page|add:-5 }}  没有减法过滤器，可通过加上一个负数来实现
+{{ p.name|lower }}   变为小写
+{{ p.name|upper }}  变为大写
+过滤器可以传递参数，参数需要用引号引起来
+比如：join：  {{ student.s_name|join:‘=’ }} --> xiaoming 1,,,,,,,,,,x=i=a=o=m=i=n=g= =1
+ 默认值：default，格式{{ var|default value}}，如果变量没有被提供值或者为False，空，会使用默认值
+
+根据指定格式转换日期为字符串，处理时间的是对date转换
+{{ dateval| date:'y-m-d' }}
+
+
+
+
+
+HTML转义	
+------------------------
+将接收到的数据当作普通字符串处理还是当成HTML代码来渲染的一个问题
+例如：
+{{ code }}
+
+    code='<h1>睡着了</h1>'
+  data={
+        'code':code,
+    }
+     return render(request,'student_list.html',context=data)
+
+则上面的{{ code }}接受的数据是'<h1>睡着了</h1>'，在页面中显示的是<h1>睡着了</h1>
+{{ code|safe }}这样写，则就会显示  睡着了，就当作HTML来处理了
+但safe要谨慎使用，因为有很多雷,  javascript能攻陷网站，所以不要轻易说网站安全了
+
+{% autoescape off %}
+    {{ code }}
+{% endautoescape %}
+也可以进行渲染转义
+{% autoescape on %}
+    {{ code }}
+{% endautoescape %}
+把off 变为on就 不渲染了
+
+
+
+
+模板继承 --->>重点
+----------------------------
+模板也可继承
+关键字 block ：挖坑
+{% bolck xxx %}
+      code
+{% endblock %}
+
+extends继承，写在开头位置
+{% extends ‘父模板路径’ %}
+
+include：加载模板进行渲染
+ 格式：{% include ‘模板文件’ %}
+
+
+
+结构标签
+----------------------------------
+block  块。  
+用来规划我们的布局  
+首次出现，代表规划
+第二次出现，代表填充以前的规划
+第三次出现，代表填充以前的规划，默认动作是覆盖，如果不想覆盖，可以添加{{ block.super }}，这样就实现了增量式操作
+extends  继承   
+可以获取父模板中的所有结构
+
+block+extends  ----->>>> 化整为零
+
+include
+包含
+可以将页面作为一部分，嵌入到其他的页面中
+
+include+block ------>>>>> 由零聚一
+
+能用block+extends  搞定的，尽量不要用include，因为include内部效率相对不高
+
+
+如果我们继承自一个父模板，子模版自己直接重写的页面结构是不生效的，只能在既有的坑中填充
+
+
+
+静态资源
+以后项目部署讲究动静分离
+
+静态资源使用：
+创建静态文件夹
+在settings中注册STATICFILES_DIRS=[]
+在模板中使用     --》加载静态资源 {% load static %}，使用{% static xxx %}，xxx相对路径
+
+坑点
+仅在debug模式可以使用，debug关了就不能用了
+以后需要自己单独处理
+
+
+
+
+--------------------------------------------------------
+视图（views）
+django中的视图主要用来接受web请求，并作出响应，中间可能会访问数据库
+本质上就是 项目中的views.py文件
+	
+
+
+
+url路径规则
+正则表达式匹配路径----->>>>>因为我看的视频讲的是1.11 版本的，但是我用的django是2.22版的，所以感觉对于正则表达式这个有些语法有些不同。在这就不都记录了
+可以使用正则表达式。为此，请使用 re_path()而不是path()。
+	
+路由中的参数用（）获取
+一个（）对应views中函数的一个参数
+参数   （参数个数必须与视图函数中的参数个数相同）
+路径参数  
+----->>>>位置参数    按照书写顺序来匹配    
+re_path('gettime/(\d+)/(\d+)/(\d+)/',views.get_time),
+这个如果函数中参数第一个不是小时，则时间就不对了
+
+----->>>>关键字参数   按照关键字来匹配,和顺序就无关了    
+re_path('getdate/(?P<year>\d+)/(?P<month>\d+)/(?P<day>\d+)/',views.get_date),
+第一个就是年，第二个就是月，第三个就是日
+第一个参数就是给year，第二个参数就是给month，第三个就是给day。不论其在views函数中的位置如何
+
+
+url反向解析
+-------------------
+{#硬编码，写死了，如果把路径给改了，该方法就失效了#}
+<a href="/two/learn/">GO LEARN</a> 
+
+{# 反向解析，更灵活#}
+<a href="{% url 'second:learn' %}">GO LEARN</a>  
+带参数
+1---   位置参数-  <a href="{% url 'second:get_time' 15 31 48 %}">time time</a>  {# 更灵活#}
+2---   关键字参数-  <a href= url 'second:get_date' year=2019 month=2 day=31 %}">date time</a>  {# 更灵活#}	
+
+
+综上：反向解析就是根据路由中注册的namespace和子路由中注册的name，这两个参数来获取我们的路径，在模板中用{% url ‘namespace:name’ %}
+
+
+
+
+
+return render(request,'grade_student_list.html',context=locals())
+locals内部函数，将局部变量使用字典的形式进行打包，key就是变量名，value就是变量的数据
+
+
+
+
+错误页面定制
+在模板中重写对应错误状态码页面，关掉settings中的debug就可看到，404HTML可自写，就近原则，我们写的404文件离项目更近，所以先找到我们的404 ，如果我们没写，就会找到django的404文件
+
+
+
+
+
+
+
+
+
+-----------
+双R
+request
+response
+当服务器接到HTTP的请求后，会根据请求报文创建HttpResponse对象
+HttpResponse对象是django创建的，这个对象很多东西不可修改（比如请求路径啥的）
+-----------
+视图中的第一个参数就是httpresquest对象
+属性：
+path  请求的路径
+method      请求的方法，常用GET POST
+GET     类似字典的参数，包含了get的所有参数, 类字典结构，一个key可以对应多个value
+POST   类似字典的参数，包含了post的所有参数
+FILES    类似字典的参数，包含了上传的文件
+COOKIES
+session
+方法：is_ajax()
+
+
+接收GET参数
+输入
+http://127.0.0.1:8000/two/haverequest/?hobby=encoding&hobby=basess&hobby=da
+hobby=request.GET.get('hobby')
+hobby1=request.GET.getlist('hobby')
+结果
+['encoding', 'basess', 'da']
+da
+
+接收POST参数
+<form action="{% url 'second:do_create_student' %}" method="post">
+    <span>username</span> <input type="text" name="username" placeholder="please input">
+
+    <button>Submit</button>
+</form>
+
+username=request.POST.get('username')
+
+
+
+
+Resquest META（源信息）
+可以获取很多参数，即客户端的信息，只要人家访问你的网站就可以通过META找到人家电脑的信息
+REMOTE_ADDR可以访问远端IP  ---->>>>即人家电脑的IP
+
+
+------------------------------------------
+Response
+服务器返回给客户端的数据
+HttpResponse由程序员自己创建
+1.不使用模板直接HttpResponse（）
+2.调用模板，进行渲染
+----2.1 先load对象，在渲染
+----2.2 直接用render，一步到位
+
+render( request , template_name , context)
+request   请求
+template_name   模板路径
+context    字典参数	
+
+
+
+HttpResponse（）
+参数/属性：
+content     返回的内容
+charset      编码格式
+status_code    响应状态
+content-type    MIME类型（与电脑上的扩展名相似）
+例子：
+    response=HttpResponse()
+    response.content='德玛西亚'
+    response.status_code=404
+    return response
+
+方法
+init    初始化内存
+write（xxx）  直接写出文本------->>>写给客户端
+fluse（）    冲刷缓存区--------->>>>写的时候要刷，理解为马桶。比如马桶用一次要冲一次，如果用一次不冲用一次不冲，时间长就堵了，用不了了。缓存区也是这样，长时间不刷就写不进去了。文件在写的时候不是一下子写到文件上，是有一个缓冲区，然后持续写到磁盘上
+例子：
+    response.write('听说马桶堵了')
+
+    response.flush()
+
+set_cookie    
+delete_cookie    删除cookie，上面那个是设置
+
+
+----------------------
+MIME类型
+作用  指定传输数据使用哪种形式打开
+格式：大类型/小类型
+例子：
+image/png
+image/jpg
+
+可以在百度百科查看MIME
+----------------
+
+
+
+
+
+HttpResponse子类HttpResponseRedirect（重定向）暂时的   302   简写redirect（与render一个类）
+重定向什么意思呢？？就是 你请求我，我现在很忙，或者不想处理，交给别人来处理了
+响应重定向：可以实现服务器内部跳转
+例子：return HttpResponseRedirect('/app/hello/')------->>>>是硬编码
+views中反向解析为：--->>> url=reverse('app:hello')      return HttpResponseRedirect(url)
+
+
+
+jsonResponse
+以 json格式返回数据
+json：
+jsonObject---->> { }     key:value
+jsonArray---- >> [ ]    列表中可以是普通类型，也可以是jsonobject
+jsonObject和jsonArray可以嵌套
+
+1.给移动端的数据很多是用jsonResponse
+2.给Ajax
+例子：
+    data={
+        'status':200,
+        'msg':'ok',
+    }
+    return JsonResponse(data=data)
+
+还有一些子类：
+HttpResponseServerError   500
+HttpResponseBadRequest   400
+HttpResponseNotFound     404
+HttpResponsePermanentRedirect   重定向，永久性  301
+HttpResponseNotAllowed  405
+
+
+
+------------
+会话技术
+------------
+会话技术怎么出现的，为什么会有这个，解决了什么问题。。。
+服务器怎么知道你还是你？来了一次，以后又来了，服务器怎么知道是你
+会话技术出现了一个场景，服务器如何识别客户端。即我怎么知道你是你
+如果一直连着，知道你是你	
+Http在web开发中基本都是短连接
+
+一个请求生命周期，从request开始，到response就结束了，下次再来就认为是全新的客户端了。这就是会话技术出现的原因。会话技术就相当于给你一个令牌，然后你下次来的时候就知道是你了
+
+种类：
+1. Cookie   
+客户端会话技术。即数据存储在客户端。   键值对存储。 特性：支持过期时间，默认Cookie会自动携带本网站所有Cookie。Cookie不能跨域名，跨网站
+cookie本身由浏览器生成，通过response将cookie写到浏览器上，下一次访问，浏览器会根据不同的规则携带cookie过来
+response.set_cookie(key,value,[,max_age=None,exprise=None])
+参数key,value 是必须的，那两个是可选的
+
+获取cookie：    request.GET.get(key,defaultvalue)      request.COOKIES.get('content')
+
+response.set_cookie(key,value,max_age=None,exprise=None)
+max_age: 整数，指定cookie的过期时间，以秒为单位
+exprise ：整数，指定过期时间，还支持是一个datetime或timedelta，可指定一个具体日期时间
+max_age  exprise两个选一个指定
+默认关闭浏览器失效
+过期时间的几个关键时间
+max_age 设置为0浏览器关闭失效
+设置为None永不过期
+expires=timedelta（day=10）10天后过期
+
+cookie默认不支持中文，若想存储中文，可以进行转换 (具体怎样转换，不知道，有一个base64算法)，转成其他的字符，然后再转换回来。
+
+可以加盐，即加密，获取的时候需要解密
+加盐：
+    response.set_signed_cookie('content',uname,'rose')
+解密
+    uname=request.get_signed_cookie('content',salt='rose')
+加盐也不支持中文
+
+删除cookie
+例子：
+def logout(request):
+    response= HttpResponseRedirect(reverse('app:login'))
+    response.delete_cookie('content')    
+    return response
+
+
+2. Session
+服务端会话技术，数据存储在服务器中，默认session存在内存中，django会把session持久化在数据库中
+Django中session的默认过期时间是14天，数据使用了数据安全，支持中文，使用的base64在前部添加了一个混淆串
+session依赖于cookie，cookie中有个sessionid，sessionid与数据库的django_session表中的session_key字段相同，从这个可以找到客户端，即你是你
+
+删除
+response.delete_cookie('sessionid')   删除cookie   数据库中还有session数据，只是 网页中cookie没了
+del request.session['username']       删除session        数据库中的数据没完全删，变短了，变成了垃圾数据，而且网页中cookie还在
+request.session.flush()                删除cookie和session    ，数据库中的数据全删了，网页中的cookie也删了
+
+django中启用session：
+settings中 INSTALL_APPS:  ‘django.contrib.sessions’
+MIDDLEWARE:  'django.contrib.sessions.middleware.SessionMiddleware'
+
+每个HttpRequest对象都有一个session属性，也是一个类字典对象
+
+常用操作：
+get（key，default=None）根据键获取会话的值
+clear（）清除所有会话
+flush（）删除当前的会话数据并删除会话的cookie
+session.session_key获取session的key
+
+设置数据
+request.session【‘user’】=username
+数据存储到数据库中会进行编码使用的 是Base64
+
+
+
+3. Token
+服务端会话技术
+自定义的session
+
+如果在web页面开发中，使用起来跟session基本一致
+如果是在移动端或者客户端开发中，通常以json形式传输，需要移动端自己存储Token，需要获取Token关联数据的时候，主动传递Token
+不支持cookie的设备可以用token
+
+
+
+cookie和session和token的对比
+cookie用起来更简洁，服务器压力更小，数据不是很安全（加盐稍微安全点）
+session 也很简洁，但服务器要维护session，相对安全
+token 自定义的session，拥有session的所有优点，自己维护略微麻烦，但支持更多的终端，不仅仅是浏览器，手机也能用
+
+
+
+
+
+
+
+CSRF
+{% csrf_token %}
+防跨站攻击，防止恶意注册，确保客户端是我们自己的客户端
+使用了cookie中csrftoken进行验证，传输
+服务器发送给客户端，客户端将cookie获取过来，还要进行编码转换（数据安全）
+如何实现的：
+在我们存在{% csrf_token %}标签的页面中，渲染的时候，response会自动设置一个cookie  ，   csrftoken
+当我们提交的时候，会自动验证csrftoken
+验证通过，正常执行以后流程，验证不通过，直接403
+
+
+
+
+
+算法
+1..编码解码（转换过去，再转换回来）
+base64
+urlencode
+
+2.摘要算法，指纹算法，杂凑算法
+MD5,SHA      ----- MD5默认128位的二进制，32位的16进制    ----PYTHON中hashlib
+不管输入多长，输出是固定长度
+单向不可逆        只能加密，不能解密
+只要输入有任意变更，输出都会发生巨大变化
+
+3.加密
+对称加密   ----只有一把钥匙，可以用这把钥匙加密也可以解密    -----常见算法:DES，AES
+-----效率高，  钥匙一旦丢失，所有数据就全玩完了
+
+非对称加密  -----两把钥匙，成对的。   公钥和私钥，公钥加密的数据只有私钥能解开，私钥加密的数据只有公钥能解开，互相制约。------常见算法：RSA,PGP     ---- 安全性最高，算法复杂，需要时间长，支付宝微信都是用的RSA
+
+
+
+
+
+
+
+
+
+
+迁移
+分两步实现      --生成迁移文件    ---执行迁移文件
+迁移文件的生成  -- 根据models文件生成对应的迁移文件    --根据models和已有迁移文件差别，生成新的迁移文件
+执行迁移文件    --先去迁移记录查找，哪些文件未迁移过   --执行未迁移的文件     --执行完毕，记录执行过的迁移文件
+重新迁移     --删除迁移文件     --删除迁移文件产生的表    --删除迁移记录 
+
+
+
+
+
+
+
+
+
+模型关系
+1 ：1      --- 用于复杂表的拆分，扩展新功能    ---django中OneToOneField ，使用的时候，关系的声明，还是有细微的差别的  ---使用外键（ForeignKey）实现的，然后对外键添加了唯一约束
+
+删除 ----很多数据会有联系，把一个数据删了之后其他与之级联的数据也会删除
+----级联表   主表    从表       ----谁声明关系谁就是从表    ---在开发中如何确定主从，  当系统遭遇不可避免的毁灭时，只能保留一张表的 时候，这张表就是主表。
+-----默认（on_delete=CASCADE）  从表删除，主表不受影响， 主表数据删除，从表数据直接删除        --(on_delete=PROTECT) 受保护的模式   主表如果存在级联数据，要删除主表数据时，不能成功，不存在级联数据时，可以成功       开发中为防止误操作，通常会设置为此模式
+
+----（on_delete=SET_NULL   SET_DEFAULT  SET()）将关系设置为一个特定的值
+
+级联数据获取   ----比如：通过身份证获取人，通过人获取身份证
+    idcard=IDCard.objects.last()
+    person=idcard.id_person
+    return HttpResponse(person.p_name)
+
+    person=Person.objects.last()
+    idcard=person.idcard
+    return HttpResponse(idcard.id_num)
+
+主获取从，隐形属性  默认就是级联模型的名字
+从获取主，显性属性  就是属性的名字
+
+
+
+1 ：多  -----ForeignKey
+主从获取： 主获取从，隐性属性，   获取方式：级联模型_set       例如学生和班级模型，grade.student_set   。杠set(_set)是Manager的子类，all（），filter（），exclude（），Manager上能使用的函数都能使用
+从获取主 ： 显性属性，
+
+ 
+
+多 ：多
+最复杂，开发中很少直接使用，而是自己维护多对多的关系
+产生表的时候会产生的单独的关系表，关系表中存储关联表的主键，通过多个外键实现的，多个外键值不能同时相等
+
+级联数据：
+对级联数据的操作：add ，remove，clear，
+级联数据获取：从获取主，使用属性，属性是一个Manager子类，
+主获取从，隐性属性，也是Manager的子类，操作和从操作主完全一样
+
+
+ManyRelatedManager 在函数中定义的类，并且父类是一个参数，这种用法是动态创建。
+类都是动态创建的，父类也是动态指定的
+
+
+
+
+
+
+
+
+模型继承
+Django中模型支持继承
+默认继承是会将通用字段放在父表中，特定字段（自己的字段）放在自己的表中，中间使用外键连接。   
+关系型数据库，关系越复杂，效率越乱，查询越慢，父类表中也会存储过多的数据
+。
+使用元信息（META）abstract，来解决这个 问题，使模型抽象化，就将两个表分离开，抽象的模型就不会在数据库中产生映射了，子模型的表中直接包含父模型的字段。不会产生父表了。单纯的继承字段
+
+
+
+
+
+
+sql to  models
+在企业中开发中，一般是先写sql的表，再生成models
+从django 中创建模型然后生成数据库中的表，models  --->  sql，已经可以使用了
+
+从数据库中的表生成 django中的模型 ，sql --->models，django也提供了很好的支持
+python manage.py inspectdb，可以直接根据表生成模型，元信息（META）中包含一个属性，manage=False，就是说有了这个东西模型在迁移的时候不会迁移。
+如果自己的某个模型，不想被迁移系统管理，也可以用manage=False进行声明
+python manage.py inspectdb 
+
+
+
+
+
+静态文件和模板文件的区别（static，templates）
+静态文件中的文件是静态的，只支持原生html，不能使用模板语法
+模板文件支持模板语法，并且是从MTV流程渲染出来的，东西是动态的
+
+静态的就是写啥就是啥，如果一些页面是不变的，是死的，可以放在静态里面。因为放在静态里的效率是比执行MTV这套流程效率高很多的
+
+
+
+
+
+
+文件上传（上传是不会将文件一下就上传完，是一块一块的上传的）（客户端必须使用提交的方式，以后可能会不用POST，然后指定enctype="multipart/form-data"，告诉你是多块的，表单数据 )
+先收到要上传的文件，然后再打开一个文件，再将收到的文件一块块打碎存到文件中
+例子1：（最原始的写法）（从request.FILES中获取到上传的数据，之后打开一个文件，从上传上来的文件进行读取，向打开的文件中进行写入，每次写入记得flush）
+<form action="{% url 'app:upload_file' %}" method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    <span> 文件：</span>
+    <input type="file" name="icon">
+    <br>
+    <input type="submit" value="上传">
+</form>
+
+def upload_file(request):
+    if request.method=='GET':
+        return render(request,'upload.html') 
+    elif request.method=='POST':
+        icon=request.FILES.get('icon')      接受HTML表单的name="icon"的内容
+        print(type(icon))
+
+#已经获取到文件icon，然后怎么保存呢？就打开一个文件，然后把获取到的文件放进去就行
+        with open('E:\pycharm程序\sqltomodels\static\img\icon.jpg','wb') as save_file:       
+            for part in icon.chunks():            #chunks把文件变成一块一块的，然后分块写入文件
+                save_file.write(part)    #写文件，写的是二进制的文件
+                save_file.flush()
+        return HttpResponse('文件上传成功')
+
+
+
+
+例子2：（django内置的，ImageField，FileField，图片需要依赖一个库pillow，在settings中注册MEDIA_ROOT，然后指定字段的upload_to，upload_to是相对路径，相对于的是MEDIA_ROOT路径，之后就可以传了。以后就可以通过字段来获取了。upload_to还支持时间格式化）
+在settings中注册MEDIA_ROOT=os.path.join(BASE_DIR,'static/upload')
+
+创建模型
+class UserModel(models.Model):
+    u_name=models.CharField(max_length=16)
+    #upload_to是相对路径，相对于的是MEDIA_ROOT  媒体根目录
+    u_icon=models.ImageField(upload_to='icons')
+
+def image_field(request):
+    if request.method=='GET':
+        return render(request,'image_field.html')
+    elif request.method=='POST':
+        username=request.POST.get('username')
+        icon=request.FILES.get('icon')
+
+        user=UserModel()
+        user.u_name=username
+        user.u_icon=icon
+        user.save()
+
+        return  HttpResponse('成功创建 {}'.format(user.id))
+
+
+
+在linux中有一个瓶颈，一个文件夹中子文件数超过65535个时，这个文件夹打不开了
+为了避免这个问题，把之中的文件做一个归类，比如按时间，按首字母，
+upload_to 可以拼接年%Y 月%m 日%d，就会分文件夹进行保存了，就可以避免瓶颈问题了
+例：u_icon=models.ImageField(upload_to='icons/%Y/%m/%d')
+
+
+
+
+
+requests库  
+---请求库，实际上是urllib的封装，urllib是python原生内置模块
+---使用场景：爬虫，MCS结构---mcs结构多了一个中间层，多了个中间层服务器
+
+
+
+
+
+
+
+
+缓存
+提升服务器响应速度，缓解服务器的读写压力，提升用户的体验
+将执行过的操作数据存储下来，在一定时间内，再次获取数据的时候，直接从缓存中获取
+选缓存：比较理想的方案，缓存使用内存级缓存，内存的响应速度块
+django内置缓存框架
+缓存框架的核心目标
+较少的代码，缓存应该尽可能快，因此围绕缓存后端的所有框架代码应保持在绝对最小值，特别是对于获取操作
+一致性   缓存API应该是提供跨越不同缓存后端的一致接口，有点类似ORM的感觉     
+可扩展   允许别人扩展
+
+django内置了缓存框架，提供了几种常用的缓存
+1. 基于Memcached缓存   ，内存级数据库，响应速度快，相对来说不错，但相对于redis来说支持的数据类型较单一，性能也是redis好
+2. 使用数据库进行缓存       ，操作磁盘的，慢
+3. 使用文件系统进行缓存    ，也是基于磁盘
+4. 使用本地内存进行缓存     ，速度快，但不能跨电脑
+5. 提供缓存扩展接口
+
+
+缓存配置（基于数据库）
+1. 创建缓存表     ----python manage.py createcachetable [table_name]
+
+2. 缓存配置（在settings中）
+CACHES={
+    'default':{
+        'BACKEND':'django.core.cache.backends.db.DatabaseCache',
+        'LOCATION':'mycachetable',
+        'TIMEOUT':60*5，##默认缓存超时时间
+         ’OPTIONS‘：{
+	‘MAX_ENTRIES’:'300',
+	},
+          'KEY_PREFIX':'rock'，
+          ’VERSION‘:'1',
+    }
+}
+TIMEOUT下面的选项可以省略
+
+
+缓存使用
+在视图中使用（使用最多的场景），模板中也可以使用
+@cache_page（）  (装饰器) 
+参数：time 缓存的时间，秒  60*5 缓存5分钟    
+cache 缓存配置，默认default 缓存到那哪个库里
+key_prefix 前置的字符串，一个前缀
+
+
+缓存底层（可以自己写缓存）
+获取cache(有多个缓存)
+from django.core.cache import caches
+cache=caches['cache_name']
+
+只有一个缓存
+from django.core.cache import cache
+
+	
+缓存操作（和字典基本差不多）（核心点是key的选择）
+cache.set  (设置值)
+    key
+    value
+    timeout
+
+获取值  get
+
+添加值 add
+
+get_or_set
+get_many
+set_many
+delete
+delete_many
+clear
+incr  增加   incr(key,value)key对应的值上 加value
+decr 减少   decr（key,value）key对应的值上减少value。 如果value不写，默认变更为1，减少一，给值就减少多个
+
+
+例子：
+#@cache_page(30)   不用装饰器
+def news(request):
+    result=cache.get('news')      #从内存中获取key对应的值    ，如果没有缓存，这个key值与你设置的key值相同。如果有缓存，我就不知道这个key值是什么了
+
+    if result:                                         #如果值存在，就返回，否则......cache.set
+        return HttpResponse(result)
+
+    news_list=[]
+    for i in range(10):
+        news_list.append('最近贸易战又开始了 {}'.format(i))
+
+    sleep(5)
+    data={
+        'news_list':news_list
+    }
+    response=render(request,'news.html',context=data)
+
+    cache.set('news',response.content,timeout=60)  #设置缓存内的值(key，value，timeout）
+    return response
+
+
+这种缓存是django内置的数据库缓存，但数据库性能相对来说是比较低的，因为存在磁盘上。电脑计算机目前最大的瓶颈就是磁盘，所以我们要把他改成一种内存级的数据库，内存级的数据库有redis和Memcached，但Memcached已经被redis取缔了。
+
+
+
+配置redis数据库
+装库 django-redis      ，django-redis-cache  （这两个库不是django自带的，要下载）
+
+配置和内置的缓存配置基本一致
+CACHES={
+    'default':{
+        'BACKEND':'django_redis.cache.RedisCache',
+        'LOCATION':'redis://127.0.0.1:6379/1',                                 #缓存的位置
+         ’OPTIONS‘：{
+	'CLIENT_CLASS':'django_redis.client.DefaultClient',
+	}
+    }
+}
+redis 以后要改就改Location就行，不可能一直在本机，有可能会专门有服务器放redis
+
+
+使用redis，redis服务要启动。我的电脑上没有redis，需要下载安装
+
+
+
+django支持多缓存
+可以同时配置多个缓存，定义不同的名字
+
+CACHES={
+    'default':{
+        'BACKEND':'django.core.cache.backends.db.DatabaseCache',
+        'LOCATION':'mycachetable',
+        'TIMEOUT':60*5，
+    }
+    'redis_backend':{
+        'BACKEND':'django_redis.cache.RedisCache',
+        'LOCATION':'redis://127.0.0.1:6379/1',                             
+         ’OPTIONS‘：{
+	'CLIENT_CLASS':'django_redis.client.DefaultClient',
+	}
+    }
+
+}
+有了两个实现，怎样用
+result=cache.get('news')   ，在获取cache的时候换一种方式，cache=caches['redis_backend']
+
+@cache_page(30，cache=’default‘),装饰器可以加  缓存在哪个库里   ，如果选redis_backend就缓存在redis库中了
+
+
+
+
+
+
+
+
+中间件（典型实现是装饰器，中间件就是用类装饰器实现的）
+是一个django内置的轻量级的，底层的插件，可以介入django的请求和相应过程（面向切面编程  AOP）
+
+中间件的本质是一个python 类
+
+面向切面编程（Aspect Oriented Programming）简称AOP，AOP的主要实现目的是针对业务处理过程中的切面进行提取，他所面对的是处理过程中的某个步骤或阶段，以获得逻辑过程中个部分之间低耦合的隔离效果
+在不修改源代码的情况下，动态的去添加一些业务逻辑处理
+
+
+有四个切点
+
+
+切入函数
+_init_  没有参数，服务器响应第一个请求的时候自动调用，用户确定是否启用该中间件
+
+ process_request(self,request):在执行视图前被调用，每个请求上都会调用，不主动进行返回或者返回HttpResponse对象（在Broswer与url之间）
+
+process_view(self,request,view_func,view_args,view_kwargs)：调用视图之前执行，每个请求上都会调用，不主动进行返回或者返回HttpResponse对象（在url与view之间）
+
+process_template_response(self,request,response):在视图刚好执行完后进行调用，每个请求上都会调用，不主动进行返回或者返回HttpResponse对象
+
+process_response(self,request,response),所以响应返回浏览器之前调用，每个请求上都会调用，不主动进行返回或者返回HttpResponse对象
+
+
+process_exception(self,request,exception):当视图抛出异常时（会出现5xx）调用，不主动进行返回或者返回HttpResponse对象
+
+
+自定义中间件流程
+1. 在目录下创建middleware目录
+2. 目录中创建一个python文件
+3. 在python 文件中导入中间件的基类，然后创建子类
+     from django.utils.deprecation import MiddlewareMixin
+4. 在类中 根据功能需求，创建切入需求类，重写切入点方法
+ class LearnAop（MiddlewareMixin）：
+	def  process_request(self,request):
+ 		print('.......')
+
+5. 启用中间件，在settings中进行配置，MIDDLEWARE中添加middleware.文件名.类名
+
+使用中间件的例子：
+from django.utils.deprecation import MiddlewareMixin
+
+class HelloMiddle(MiddlewareMixin):
+    def process_request(self,request):
+        print(request.META.get('REMOTE_ADDR'))       #打印出访问该页面的地址
+
+
+
+AOP中间件  （ 只要是介于请求与响应之间的事情，都能做）
+-------实现统计功能     统计IP  统计浏览器    只要是请求里带的，都可以统计（当用户访问网页时，就可以获取信息，然后就可以进行统计）
+
+-------实现权重控制（优先级）
+白名单：（例子）提高优先级
+class HelloMiddle(MiddlewareMixin):
+    def process_request(self,request):
+        ip=request.META.get('REMOTE_ADDR')
+        if ip=='127.0.0.1':
+            if random.randrange(100)>20:
+                return HttpResponse('恭喜你免费获取小米8  256G')
+
+
+黑名单：（与白名单类似）
+比如一个人在京东上今天买了一个6000的电脑，回去玩了六天就退货，然后又买了一个8000的显卡，回去玩了两天又退货，以后都是总是买，买完之后又七天无理由退货，觉得这小子不行，应该进黑名单，各种厉害的优惠卷，比如100-99的卷，不能让他抢。他一打开，那就是已抢光，别人一打开就是还有。
+
+
+
+--------实现反爬
+反爬虫 （不想网站被爬虫爬了）限制搜索次数  比如：十秒之内只能搜索一次（简单的频率反爬）
+class HelloMiddle(MiddlewareMixin):
+    def process_request(self,request):
+        if request.path=='/app/search/':
+            result=cache.get(ip)
+            if result:
+                return HttpResponse('过于频繁，请十秒之后在访问')
+            cache.set(ip,ip,timeout=10)
+
+实现60秒之内只能访问十次：
+当一次请求时，往前推一分钟，然后看一下是否达到十次，如果没有十次，则可以访问，否则，不能访问。
+用一个列表用来存当前时间，然后把一些没用的数据（垃圾数据就是时间已经过期的，超过一分钟的），清理掉，然后如果列表中的数据超过十条时，就不能访问。
+
+	
+
+实现频率控制（在这一直刷新，在一些网站上是不能一直刷的，连续刷个几十次，就会提示请证明你是个人类，然后给你个题，因为正常用户是不会一直刷新的）
+
+
+
+
+
+
+---------界面友好化，应用交互友好化
+process_exception
+例子：
+    def process_exception(self,request,exception):
+        print(request,exception)
+        return redirect(reverse('app:hello'))
+当程序出错的时候，可以友好化处理
+
+
+
+
+
+
+csrf 豁免
+加了@csrf_exempt，就可以不能验证csrf
+是一种内置的方式让我们豁免的属性
+csrf验证也是在中间件中实现的，也是继承自MiddlewareMixin
+
+
+
+
+
+
+
+中间件在settings中注册的时候是一个列表
+MIDDLEWARE = [
+    'middleware.learnmiddle.HelloMiddle',
+    'django.middleware.security.SecurityMiddleware',
+    'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.common.CommonMiddleware',
+    'django.middleware.csrf.CsrfViewMiddleware',
+    'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'django.contrib.messages.middleware.MessageMiddleware',
+    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+]
+那如果是多个中间件，如果我们没有在切点处直接返回，中间件的执行顺序是依此执行。如果我们直接进行了返回，后续中间件就不再执行了
+切点：
+----process_request      
+---process_view      
+----process_template_response
+-----process_response              一般用在跨越的时候
+-----process_exception
+切面：切点处切开可以获得的数据
+
+
+
+
+
+
+
+
+
+分页（优化加载）
+如果一个页面一下有一万条数据，加载势必很慢，用户访问一个页面一下花了半个小时，用户体验很不好。而且服务器也可能受不了，为了提高用户体验以及减轻服务器压力，通常会进行分页加载，一页只加载十条二十条
+
+
+原生实现： 偏移加限制
+
+django中提供了分页的工具，存在于django.core中
+Paginator      --- 数据分页工具
+page      ---具体的某一个页面
+
+Paginator      ：对象创建：Paginator(数据集，每一页数据数量)
+paginator=Paginator(students,per_page)   把一堆数据根据一页多少数据分成若干页
+
+属性：
+count   对象总数 数据量总数
+num_pages   页面总数
+page_range    页码列表，从1开始
+
+.........还有很多，可以去原码中查看
+
+方法： page(整数(页码)):获得一个page对象
+page_object=paginator.page(page)   #获取某一页
+page对象常见错误：
+InvalidPage：page()传递无效页码
+PageNotAnInteger：page()传递的不是整数
+Empty：page()传递的值有效，但没有数据 
+
+Page：对象获得，通过Paginator的page()方法获得
+
+
+属性：object_list  :当前页面上所有的数据对象
+number：当前页的页码值
+paginator  ：当前page关联的paginator对象  （不常用）
+
+方法：
+has_next()   : 判断是否有下一页
+has_previous()：判断是否有上一页
+has_other_pages()  :判断是否有上一页或者下一页
+next_page_number():  返回下一页的页码
+previous_page_number(): 返回上一页的页码
+
+.........
+
+
+
+
+
+
+
+
+Django第三方
+验证码（这里使用pillow库 来绘制，也有直接生成验证码的库）
+在用户登录，注册以及一些敏感的操作的时候，我们为了防止服务器被暴力请求，或爬虫爬取，我们可以使用验证码进行过滤，减轻服务器的压力
+
+Pillow 核心   ：Image   ImageDraw    ImageFont
+                       画布       画笔                修饰画笔
+
+Image ：颜色，尺寸，模式
+ImageDraw    ：属于哪一个画布，在哪个画布画，封装了绘制的API，画文字，线，点，弧
+ImageFont：画笔的辅助工具，字体，设置绘制的样式
+
+
+画完怎样呈现给用户，需要将画布转化为二进制流，并且添加格式限定（相当于指定扩展名类型）
+验证码没必要永久存下来，使用内存流，将数据存在内存中，  ByteIO   ，将图片存在内存中，从流中获取到数据值
+通过HttpResponse 返回图片内容，需要指定content_type即MIME（标识打开我们数据的应用程序）image/png
+
+绘制流程
+例子：
+def get_code(request):
+    #初始化画布，初始化画笔
+    mode='RGB'
+    size=(200,100)    #画布大小
+    red=get_color()      #get_color是自己封装的函数，
+    green=get_color()    #def get_color():
+						 #	return random.randrange(256)
+    blue=get_color()     #  
+
+    color_bg=(red,green,blue)   #画布背景颜色
+    image=Image.new(mode=mode,size=size,color=color_bg)  #设置画布
+    imagedraw=ImageDraw.Draw(image,mode=mode)  #设置画笔，在哪个画布上，模式是什么
+
+    imagefont=ImageFont.truetype(settings.FONT_PATH,80)  #设置图像字体
+
+    verify_code=generate_code()
+    request.session['verify_code']=verify_code
+    for i in range(4):
+        fill=(get_color(),get_color(),get_color())
+        imagedraw.text(xy=(50*i,0),text=verify_code[i],font=imagefont,fill=fill)  #画图，坐标，文字，字体，fill填充颜色
+
+    for i in range(10000):
+        fill=(get_color(),get_color(),get_color())
+        xy=(random.randrange(200),random.randrange(100))
+        imagedraw.point(xy=xy,fill=fill)
+
+
+    fp=BytesIO()             #内存流
+    image.save(fp,'png')     #将图片保存在该内存中，以png类型存储
+
+    return HttpResponse(fp.getvalue(),content_type='image/png')  #怎样将图片显示在网页上，要将其存在内存中，再从中取出
+
+
+def get_color():
+    return random.randrange(256)
+
+def generate_code():
+    source="qwertyuiop1234567890asdfghjklXZXCVBNM"
+    code=''
+    for i in range(4):
+        code+=random.choice(source)
+    return code
+pycharm程序中还有实现验证验证码的
+验证码验证：
+----客户端验证
+----服务端验证：在提交的时候验证验证码的有效性
+
+验证码的刷新     浏览器的缓存策略，是以url为标识，如果url没变，浏览器就认为内容没变 	   #什么鬼？
+解决方案：每次给你不同的地址，对地址进行一个参数拼接，每次传递一个不同的参数               # 什么意思？
+
+
+
+
+
+
+
+
+
+
+
+
+富文本
+（Rich Text Format）RTF，是有微软开发的跨平台文档格式，大多数的文字处理软件都能读取和保存RTF文档，其实就是可以添加样式的文档，和HTML有很多相似的地方
+django有很多库可以做这个东西
+
+插件tinymce
+pip install diango-tinymce
+
+使用位置：
+1. 后台管理中使用
+2. 在页面中使用，通常用来做博客
+
+使用：
+配置settings
+ INSTALLED_APPS添加tinymce应用
+添加默认配置
+TINYMCE_DEFAULT_CONFIG={
+	'theme':'advanced',
+	‘width’:800,
+	'height':600,
+}
+(在helloproject项目中可以查看代码)
+
+
+
+
+
+
+DjangoDebugtoolbar （只限django使用） django插件
+django调试工具，是在页面中	动态注入一个控制面板，有各种信息
+配置DjangoDebugtoolbar ：
+https://django-debug-toolbar.readthedocs.io/en/latest/installation.html#configuring-internal-ips
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+-----------------------------------------------------------
+爱鲜蜂项目相关
+
+
+
+
+
+用户激活认证
+途径：邮件，短信，人工审核
+邮件：发邮件，点击邮件中的链接就激活了。。
+链接为啥能激活：链接中存在用户的唯一标识（比如token），根据该标识可以找到用户，然后在数据库中可将其是否激活字段改为true。标识存在过期时间，只能用一次
+
+
+发邮件：收件人的地址，发件人的信息（用户名，密码，服务器（邮件服务器，端口），内容）
+
+
+
+发邮件在settings中进行配置：
+EMAIL_HOST='smtp.qq.com'              #配置服务器
+EMAIL_PORT=25			#配置端口
+EMAIL_HOST_USER='1090425759@qq.com'       #邮箱的账户
+EMAIL_HOST_PASSWORD='ssgyapynucjojeig'    #使用授权码
+
+例子：
+def send_email(request):
+    subject='AXF EMAIL TEST'
+    message='<h1>hello</h1>'
+    from_email='1090425759@qq.com'
+    recipicent_list=['1090425759@qq.com']
+    send_mail(html_message=message,subject=subject,message='xxx',from_email=from_email,recipient_list=recipicent_list)
+
+
+激活链接设计:.......
+
+
+
+
+
+
+
+
+
+
+错误信息
+先将错误信息存储下来，在错误显示页面（登陆页面）获取错误信息，而且保证错误信息只能出现一次（获取到数据之后，直接将自己删除）
+
+
+
+
+
+
+
+
+
+
+
+购物车（逻辑比较复杂）（关系很多）
+多对多的关系
+用户    商品
+
+订单
+订单和已购买商品是一对多的关系
+表关系  ：  订单表   订单商品表
+
+订单商品表的数据是从购物车里选择的
+
+地址   一个订单有一个地址，选的时候可以有多个可以选，但最终只有一个，
+一个地址可以收多个订单       
+订单会级联收货地址表
+
+优惠券
+
+
+
+
+
+
+
+
+
+向购物车里添加数据
+需要用户    如果用户没登陆，直接跳转登陆页面
+需要商品     要获取商品，传递商品的唯一标识（商品ID）
+添加的合法性验证    此数据若不存在，创建购物车数据     如果此数据存在，直接将数量加 1
+（即向购物车中添加数据需要知道是哪件商品，哪个用户，然后此数据在购物车里若不存在，创建购物车数据     如果此数据存在，直接将数量加 1）
+
+（向购物车中添加商品，需要获取商品的信息。即要知道要添加的是哪一件商品，（可以通过商品的id获取），还要知道获取商品的是哪个用户，即用户必须处于登陆状态，如果用户没有登陆，就要在添加商品的时候跳转到登录页面，然后获取到商品的信息和用户的信息后，（就是获取到商品的id 和获取到用户），就要在购物车表里查询该用户是否有该商品，如果有，就做数量上的相加，如果没有，要创建该购物车数据）
+
+
+
+
+
+
+
+
+浏览器行为
+重定向
+跨域
+
+通过ajax请求 不会重定向
+
+
+
+
+
+
+
+
+
+
+
+
+购物车全选按钮
+默认状态：
+1，全选按钮是选中的，内部所有商品全选中
+2. 全选按钮未选中 ，内部所有商品中只要有一个未选中，全选就是未选中
+
+点击全选：
+1. 原状态是选中，全选和所有商品都变成选中
+2. 原状态是未选中，全选和所有商品都变成选中
+
+点击单个商品：
+商品由选中变为未选中，全选一定变成未选中，
+商品由未选中变为选中，那全选的默认状态是未选中，可能变成选中
+
+
+
+
+
+
+
+
+
+
+支付功能
+可以看官方文档  在支付宝开放平台https://open.alipay.com/platform/home.htm
+
+常见的支付： 支付宝   微信   银联   京东钱包 
+要用哪个就去他的官方文档上去查
+
+在settings中进行配置（配置密钥）
+APP_PRIVATE_KEY=open(os.path.join(BASE_DIR,'alipay_config/应用私钥2048.txt'),'r').read()
+ALIPAY_PUBLIC_KEY=open(os.path.join(BASE_DIR,'alipay_config/应用公钥2048.txt'),'r').read()
+ALIPAY_APPID='2016101400683478'
+
+然后创建支付的客户端，构建一个请求
+
+def alipay(request):
+    # 构建支付的客户端
+    # 使用alipay进行支付请求的发起
+    alipay_client = AliPay(
+        appid=ALIPAY_APPID,
+        app_notify_url=None,  # 默认回调url
+        app_private_key_string=APP_PRIVATE_KEY,
+        # 支付宝的公钥，验证支付宝回传消息使用，不是你自己的公钥,
+        alipay_public_key_string=ALIPAY_PUBLIC_KEY,
+        sign_type="RSA2",  # RSA 或者 RSA2
+        debug=False  # 默认False
+    )
+
+#构建一个请求
+    subject='i9 20核系列 RTX2080'
+
+# 电脑网站支付，需要跳转到https://openapi.alipay.com/gateway.do? + order_string
+    order_string = alipay_client.api_alipay_trade_page_pay(
+        out_trade_no="110",
+        total_amount=10000,
+        subject=subject,
+        return_url="http://www.baidu.com",
+        notify_url="https://www.baidu.com",  # 可选, 不填则使用默认notify url
+    )
+
+    return  redirect("https://openapi.alipaydev.com/gateway.do?"+order_string)
+
+
+
+
+
+
+
+
+
+
+部署
+django中自带开发者服务器   runserver  功能键壮，性能比较低，仅适用于开发   提供了路由处理功能
+如果是debug的话，还有静态资源处理功能，如果线上的话，要把debug关了，静态资源就无法使用
+
+
+部署一般不会使用单一服务器
+Apache
+Nginx    Http服务器（处理静态资源)     反向代理服务器（uwsgi，Http服务器 。与Nginx配合）（将收到的请求传给我们的服务器）   ......
+
+使用Nginx处理静态文件，使用uwsgi处理动态资源（安装uwsgi）
+
+uwsgi对接Nginx    ：只需将配置中的HTTP模式改为socket模式
+
+
+Nginx也可以对接runserver   ，  可以对接任意服务器	
+
+还有一个gunicorn的服务器
+
+
+负载均衡  参数  proxy_pass（ upstream模块）只需将自己的服务器记录在内部即可
+权重  
+down   不参与负载均衡
+back   备用服务器
+
+
+
+
+
+
+
+实现网站统计，访问统计，来源统计........
+百度统计，友盟统计   统计平台可以统计别人访问自己网站的信息。也可以统计app
+自己也可以做，但是很麻烦（将用户的各种信息记录下来，再去分析）
+
+
+
+
+
+
+
+
+远程撸代码  使用pycharm的SFTP   只要将服务器配置好就可以
+
+
+
+
+
+----------
+
+RESTful 
+一种软件架构风格，设计风格，而不是标准，只是提供了一组设计原则和约束条件
+REST是什么呢？ 它是一种架构风格，比如腾讯公司或其他公司建立API时要遵守的一种规则/风格，当然也有其他规则可以用。
+
+REST（Representational State Transfer）   “表现层状态转换”  表现层指的是 资源的表现层   资源是网络上的一个实体，一个文本，一张图片，一首歌曲，一种服务，总之就是一种具体的实例   可以使用一个URI（统一资源定位符）指向它，每种资源对应一个特定的URI。要获取这个资源，访问它的URI就可以了 因此URI就成了每一个资源的地址或独一无二的识别符
+表现层（Representation）：资源是一种信息实体，它可以有多种外在表现形式，我们把资源具体呈现出来的形式，叫做他的表现层
+
+到底什么是RESTful架构
+1. 每一个URI代表一种资源
+2. 客户端和服务器之间，传递这种资源通过某种表现层
+3. 客户端通过HTTP动词（GET POST PUT DELETE.....），对服务端资源进行操作，实现  ‘表现层状态转换’
+
+
+RESTFUL实现的就是前后端分离
+
+
+RESTful Api
+RESTful Api设计   
+Api与用户的通信协议，通常使用HTTP或者HTTPS协议
+专属域名或前缀
+可以包含版本
+在QueryString中包含过滤信息（不知道是啥）
+路径通常是名词复数
+传输格式json
+尽量带有超链接      （也不是很清楚）
+认证使用OAuth2.0    （不是很清楚）
+
+
+
+域名
+应该尽量将API部署在专用域名之下 http：//api.rock.com
+如果确定api很简单，不会有但规模扩充，可以考虑放在主域名之下http：//www.rock.com/api/ 
+版本   应该尽量将api的版本号放入URL  http：//api.rock.com/v1/  ,也用做法是将版本号放在http的请求头，头信息中
+
+
+应该在实现自己项目功能逻辑的基础上去实现restful，如果用了restful后自己的逻辑功能很难实现，那就可以不使用restful
+
+
+HTTP常用动词
+GET: （select）从服务器中取出资源
+POST：（create  or  update）在服务器创建资源或更新资源
+PUT ：（update）在服务器更新资源（客户端提供改变后的完整资源）比如：提供一个用户的全部信息
+PATCH ：(update) 在服务区更新资源（客户端提供改变的属性）比如：只提供一个用户的姓名
+DELETE：（delete）从服务器删除资源
+HEAD ：获取资源的元数据
+OPTIONS：获取信息，关于资源的哪些属性是客户端可以改变的
+
+HEAD  OPTIONS 用的较少
+
+示例
+GET /students：获取所有学生
+POST /students： 新建学生
+GET /students/id：获取某一个学生
+PUT /students/id：更新某一个学生的信息 （需要提供用户的全部信息）
+PATCH /students/id：更新某一个学生的信息 （需要提供学生的变更的部分信息）
+DELETE /students/id：删除某个学生	
+
+
+
+
+前端
+1. web 
+2. 移动端
+
+
+
+
+
+
+
+
+请求发送模拟工具
+1 .postman
+2. pycharm自带的
+3. httpie（在github上，可以在github上查看，可以用pip安装）
+例子：
+C:\Users\Dell>http -f  POST 127.0.0.1:8000/api/books/ b_name=爱 b_price=23
+HTTP/1.1 200 OK
+Content-Length: 84
+Content-Type: application/json
+Date: Sat, 14 Sep 2019 02:37:28 GMT
+Server: WSGIServer/0.2 CPython/3.7.0
+X-Frame-Options: SAMEORIGIN
+
+{
+    "data": {
+        "b_name": "爱",
+        "b_price": "23",
+        "id": 2
+    },
+    "msg": "ok",
+    "status": 201
+}
+
+
+
+
+
+
+
+当一个py文件较大时，可以将其转换为包
+比如：
+views    在__init__中导入from .bookapi import book,books  urls就可以找到
+models也可转换为包
+
+
+
+
+
+
+
+
+
+
+
+
+--------------------------------
+视图函数（进一步讲解）
+1. FBV     基于函数的视图 function  base   view
+
+2. CBV（类视图） （到此django的MTV都可以继承了）   基于类的视图    class  base   view
+继承自View，注册的时候使用的as_view()(在urls中用as_view()来调函数了)
+例子：path('hello/',views.HelloCBV.as_view(),name='hello'),
+
+
+CBV使用
+继承自系统的类视图View
+书写请求方法对应的函数，函数名就是请求方法名字的小写
+注册路由，类试图as_view()
+
+
+
+as_view()中可以传参数，但是这个参数的名字不能是请求方法的名字，也只能接受已经存在的属性对应的参数
+也只能接受已经存在的属性对应的参数的例子：
+path('hello/',views.HelloCBV.as_view(msg='sleeping'),name='hello'),
+
+class HelloCBV(View):
+    msg=None
+    def get(self, request):
+        return HttpResponse('HAHA {}'.format(self.msg))
+
+    def post(self, request):
+        return HttpResponse('post 666')
+
+
+as_view()中又定义了一个view函数，创建了一个类视图对象，保留，拷贝，传递进来的属性和参数，然后调用了dispatch方法（分发，根据请求方法的名字去分发，如果请求方法名字的函数存在，就直接调用，如果不存在，就直接给一个http_method_not_allowed，），如果请求方法在我们允许的列表中，从自己的这个对象中获取请求方法的名字小写对应的属性，如果没有找到，会给一个默认http_method_not_allowed，如果请求方法不在我们的列表中，直接就等于http_method_not_allowed，之后将参数传递，调用函数handler(request, *args, **kwargs)
+如果你写的方法是get，那么handler就是get，如果是post，那么handler就是post。。。。
+
+下面是as_view的源码
+ if request.method.lower() in self.http_method_names:
+            handler = getattr(self, request.method.lower(), self.http_method_not_allowed)
+        else:
+            handler = self.http_method_not_allowed
+  
+python   as_view()的源码中的dispatch方法：
+    def dispatch(self, request, *args, **kwargs):
+        # Try to dispatch to the right method; if a method doesn't exist,
+        # defer to the error handler. Also defer to the error handler if the
+        # request method isn't on the approved list.
+        if request.method.lower() in self.http_method_names:
+            handler = getattr(self, request.method.lower(), self.http_method_not_allowed)
+        else:
+            handler = self.http_method_not_allowed
+        return handler(request, *args, **kwargs)
+
+
+
+默认支持options请求
+
+
+
+简化版流程
+1. as_view
+2. dispatch
+3. 调用实现请求方法对应得函数名
+
+
+
+
+
+
+
+
+
+类视图TemplateView（view的子类）
+多继承的子类   继承自：
+View（实现dispatch  ，分发），
+有dispatch函数
+
+
+ContextMixin（接收上下文内容，从视图函数传递到模板的内容）
+有一个函数get_context_data
+
+TemplateResponseMixin（将内容渲染到模板中）一些属性 ：template_name       template_engine      response_class     content_type（MIME），有一个函数重要：render_to_response
+
+通过这几个函数及属性可以实现界面（类视图）：
+path('template/',views.HelloTemplateView.as_view(),name='template'),
+
+class HelloTemplateView(TemplateView):
+    template_name = 'hello.html'
+
+
+
+
+ListView
+继承自：MultipleObjectTemplateResponseMixin和BaseListView
+
+
+MultipleObjectTemplateResponseMixin
+这个类继承自TemplateResponseMixin，MultipleObjectTemplateResponseMixin这个类中做了：获取模板名字，根据template_name 获取，如果没找到，自己根据应用的名字，关联模型的名字，_list.html去查找。  比如：App/book_list.html
+names.append("%s/%s%s.html" % (opts.app_label, opts.model_name, self.template_name_suffix))
+
+
+BaseListView
+继承自MultipleObjectMixin和view
+默认实现了get，最终渲染成了render_to_response
+MultipleObjectMixin
+MultipleObjectMixin继承自ContextMixin，有一个get_queryset的函数（获取查询结果集）
+例子：只要给出template_name 和model 这样就实现了一个页面，不需要再去自己查询
+	
+path('listview/',views.HelloListView.as_view(),name='listview'),   ----->>urls中
+class HelloListView(ListView):                                ------>>>views中
+    template_name = 'booklist.html'
+    model = Book
+
+----------html中
+<ul>
+    {% for book in object_list %}
+        <li>{{ book.b_name }}</li>
+    {% endfor %}
+</ul>
+
+
+
+
+
+
+
+DetailView（单一实例，需要指定pk）
+继承自SingleObjectTemplateResponseMixin，BaseDetailView
+
+
+SingleObjectTemplateResponseMixin
+继承自TemplateResponseMixin，SingleObjectTemplateResponseMixin重写了获取模板名字的方法
+
+BaseDetailView
+继承自SingleObjectMixin和view，重写了get
+例子：
+path('single/<int:pk>/',views.HelloDetailView.as_view(),name='single'),  ---->>>urls中 
+
+class HelloDetailView(DetailView):               ------.>>>> views中
+    # template_name = 'Book.html'
+    # model = Book
+    queryset = Book.objects.all()
+
+
+
+
+
+TemplateView，需要指定template_name 。
+ListView，渲染在模板上，需要指定template_name ，数据（model或者queryset）。
+DetailView，也是渲染在模板上的，需要指定template_name ，数据（queryset或者model），单一实例，需要指定pk，在path中
+以上类视图TemplateView，ListView，DetailView可以用简单的几句代码实现，具体的查询都由源码帮你写好了，可以直接使用，可以在pycharm RESTApi , APP中查看具体代码例子
+
+例子：
+class HelloView(View):
+    def get(self,request):
+        return render(request,'hello.html')
+
+
+class HelloTemplateView(TemplateView):
+    template_name = 'hello.html'
+
+
+class HelloListView(ListView):
+    template_name = 'booklist.html'
+    model = Book
+
+
+class HelloDetailView(DetailView):
+    # template_name = 'Book.html'
+    # model = Book
+    queryset = Book.objects.all()
+-----------------------------------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+--------------------------------------
+重量级RESTful（学这个会感觉像学一个全新的框架，像django重学了）
+django-rest-framework（重的很，有自己的网站）（重量级django插件框架）
+
+
+HelloREST（第一个用django-rest-framework写的rest api）
+1. 序列化器serializer
+
+2. 视图函数  viewsets.ModelViewSet  , 是CBV    ,是视图集合    
+
+3. 路由   routers.DefaultRouter
+
+4.记得在INSTALLED_APPS中添加rest_framework
+
+runserver之后，所有api变成可视化，有超链接是使用了HyperlinkedModelSerializer
+他给我们实现了：
+对数据集合实现了get   post  	     路由/users/，/groups/
+对单个数据实现了 get  post  put  delete  patch     路由 /users/id/  ，/groups/id/
+
+viewsets做了视图函数的实现，router做了路由的注册
+viewsets  用的viewsets.ModelViewSet模块     视图函数的集合  直接集成了  对象的创建，对象的列表查询，对象的单个查询，对象的修改，对象的删除
+
+router    DefaultRouter，将viewsets注册在此，实际上生成了多个路由   要include到urlpatterns中
+
+视图：
+class UserViewSet(viewsets.ModelViewSet):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+class GroupViewSet(viewsets.ModelViewSet):
+    queryset = Group.objects.all()
+    serializer_class = GroupSerializer
+总路由：
+path('',include(router.urls)),
+子路由
+router=DefaultRouter()
+router.register('users',UserViewSet)
+router.register('groups',GroupViewSet)
+
+总之，这个东西HelloREST（第一个用django-rest-framework写的rest api），在我们把视图，路由，序列化器等各个配置注册之后，帮我们实现了增删改查的功能，so，很强大
+
+
+
+
+
+
+
+
+
+
+REST难点    模型序列化
+REST-Framework    第一个核心模块，序列化器（Serialization）
+----------------------------------------------------------------
+Serialization序列化(serializer.py)
+模型序列化  正向序列化 ---->>>>将模型转换为json，反向序列化  ————.>>> 将json转换为模型	
+子类：
+在模块serializers中，
+1. HyperlinkedModelSerializer，（序列化模型并添加超链接）（带超链接的模型序列化）（只需指定模型和字段，字段扩充了url）
+2. Serializer   （手动序列化）（原生序列化）（需要手动编写每个序列化的字段，手动实现对象的创建和更新）
+代码：（可在pycharm中查看view中怎样调用该序列化器)
+#原生序列化
+from rest_framework import serializers
+from RESTserializer.models import Person
+class PersonSerializer(serializers.Serializer):
+    id=serializers.IntegerField(read_only=True)
+    p_name=serializers.CharField(max_length=32)
+    p_age=serializers.IntegerField(default=1)
+    p_sex=serializers.BooleanField(default=False)
+
+    def create(self, validated_data):
+        return Person.objects.create(**validated_data)
+
+    def update(self, instance, validated_data):
+        instance.p_name=validated_data.get('p_name',instance.p_name)
+        instance.p_age=validated_data.get('p_age',instance.p_age)
+        instance.p_sex=validated_data.get('p_sex',instance.p_sex)
+        instance.save()
+        return instance
+
+
+3.ModelSerializer（模型序列化）（只需指定模型和字段就ok，指定字段用的fields，还可以用exclude（排除，不包含））
+代码：（可在pycharm中查看view中怎样调用该序列化器）
+#ModelSerializer序列化 （与HyperlinkedModelSerializer很类似）
+class StudentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model=Student
+        fields=('s_name','s_age')
+
+
+
+
+多个的也可以序列化，有一个many参数，将其置为True即可
+代码：
+class PersonView(View):
+    def get(self,request):
+        persons=Person.objects.all()
+
+        person_serializer=PersonSerializer(persons,many=True)
+
+        return JsonResponse(person_serializer.data,safe=False)
+
+
+
+可以用上面的序列化将我们的模型转化为json类型的数据
+
+在我们类视图函数里post方法的时候，一个一个接收数据太麻烦了，能不能使用一种简便方式一下就接受post传递的数据
+所以，有一个data=JSONParser().parse(request)，代替了s_name=request.POST.get('s_name')，s_age=request.POST.get('s_age') 一个一个接收数据，使代码更简单了，但是 现在有一个bug
+就是，在我们调用data=JSONParser().parse(request)的时候出现了一个错误，即将request中的内容转换成json数据的时候出现bug
+
+
+
+所以这个模型序列化serializer帮我们做的就是模型数据的序列化和反序列化
+
+
+
+
+以上知识可在pycharm    RESTApi项目，RESTserializer中查看代码
+
+
+
+
+
+
+
+django-rest-framework模块请求与响应(双R  request     response)
+------------------------------------------------
+request  （自己封装了一个自己的request，不是继承自django的request，而是扩充了django的request）
+rest-framework 的request  将django的request作为了自己的一个属性_request
+属性和方法 ：
+content_type    （MIME）
+stream     流
+query_params    查询参数（不属于某一个请求）（下面代码是该函数的实现，返回的是_request.GET，但在POST，PUT等请求也能获取到该参数，所以该参数不属于某一个具体的请求）
+@property
+    def query_params(self):
+        """
+        More semantically correct name for request.GET.
+        """
+        return self._request.GET
+
+
+data         同时兼容 POST, PUT ,PATCH 等 通过这个data就可以获取PUT ,PATCH 的参数
+
+user    登陆的用户   可以直接在请求上获取用户，相当于在请求上添加一个属性，这属性就是用户对象。之前AXF项目中那个验证用户登陆的有这个request.user
+
+auth   用户的令牌 认证   相当于在请求上加了一个属性，属性值是token（令牌）
+
+successful_authenticator    认证成功
+
+
+
+
+
+----------------
+Response
+也是自己封装的，虽然自己封装了，依然是HttpResponse的子类
+参数：
+data   直接接受字典 转换成json
+status  状态码
+代码：return Response({'msg':'ok'},201)
+
+属性和方法：
+rendered_content
+status_text
+
+
+
+
+
+
+----------------------------------------------------------------
+APIView（继承自view）(这个APIView中东西特别多，下面的东西是其中的东西)（APIView很重要）
+renderer_classes  渲染的类
+parser_classes   解析转换的类
+authentication_classes   认证的类
+throttle_classes    节流的类，控制请求频率的
+permission_classes   权限的类
+content_negotiation_class  内容过滤类
+metadata_class    元信息的类
+versioning_class    版本控制的类
+
+
+as_view() 中（dispatch     csrf_exempt      ）
+as_view() 调用父类中的as_view->dispatch ，然后父类中有一个dispatch ，   而且在APIView()中dispatch被重写了，所以，使用的dispatch是 重写的dispatch,  是APIView的（即如果现在有一个类，这个类里调用了一个方法，然后我现在继承自这个类，然后我又在子类中重写了这个方法，那么现在会走子类的这个方法，所以APIView中使用的dispatch是在APIView中重写过的）
+dispatch被重写，说明现在的方法策略与之前不一样了
+dispatch中（initialize_request      initial）：   
+initialize_request      使用django的request和一些过滤类构建了一个rest-framework中的Request
+
+initial
+perform_authentication 执行用户认证      遍历了我们的认证器，如果认证成功了，会返回一个元组，元组中的第一个元素就是user ，第二个元素就是auth ，token
+check_permissions 检查权限          遍历我们的权限检测器，只要有一个权限检测不通过，就直接显示权限被拒绝，所有权限都满足才算是拥有权限		 
+check_throttles 检测频率               遍历频率限制器，如果验证不通过就需要等待
+
+
+csrf_exempt    
+所有APIView的子类都是csrf豁免的
+
+
+
+
+
+
+
+-------------------------------
+错误码
+封装在了一个status模块中
+实际上就是一个常量类
+
+
+
+----------------------
+针对视图函数的包装（这样包装之后，就变成framework的request和response了）
+CBV   继承自APIView
+FBV   添加@api_view的装饰器，必须手动指定允许的请求方法，不指定就不允许
+@api_view(http_method_names=['GET','POST'])
+def books(request):
+    print(type(request))
+    return JsonResponse({'msg':'ok'})
+
+
+
+
+
+
+命名规范
+拒绝中文，空格，特殊字符，关键字，保留字在命名和路径中
+拒绝数字开头，拒绝特殊符号$开头
+小写字母或大写字母开头就行了
+使用框架，注意远离框架的名字
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+APIView子类
+generics包中     GenericAPIView    CreateAPIView    ListAPIView   RetrieveAPIView   DestroyAPIView UpdateAPIView   ListCreateAPIView    RetrieveUpdateAPIView  RetrieveDestroyAPIView  RetrieveUpdateDestroyAPIView
+
+1. GenericAPIView 中增加了模型的获取操作：get_queryset（获取查询结果集）    get_object（获取单个对象，lookup_field默认是pk）    get_serializer （获取序列化实例）   get_serializer_class（获取序列化类） get_serializer_context（获取序列化上下文内容）filter_queryset          ， paginator（分页器）   ，paginate_queryset（对结果集进行分页），get_paginated_response（获取分页后的结果）
+
+2. CreateAPIView （创建的类视图，继承自CreateAPIView就可以直接实现创建），继承自GenericAPIView，mixins.CreateModelMixin， 
+CreateAPIView 里面实现了post进行创建
+
+mixins.CreateModelMixin  中 有create  ,perform_create  ,get_success_headers
+
+所以CreateAPIView 就是做创建的
+
+
+
+3. ListAPIView （列表的类视图）继承自GenericAPIView，mixins.ListModelMixin
+ListAPIView 实现了get  ，get调用了list
+
+mixins.ListModelMixin 中有个list函数  list中帮你查询结果集，然后分页，序列化
+
+
+4.  RetrieveAPIView（查询单个数据的类视图，路径中要带个id）继承自GenericAPIView，  mixins.RetrieveModelMixin
+RetrieveAPIView实现了get，get调用的retrieve
+
+mixins.RetrieveModelMixin 中有个retrieve函数，retrieve 获取单个对象并进行序列化
+
+
+5. DestroyAPIView(销毁数据的类视图(删除数据的类视图)，也是对单个的操作，路径中要带个pk)继承自GenericAPIView，  mixins.DestroyModelMixin,
+DestroyAPIView 实现delete的方法，delete调用的destroy
+
+mixins.DestroyModelMixin,中有destroy，perform_destroy方法，destroy获取单个对象，调用执行删除，返回Response  状态码204     return Response(status=status.HTTP_204_NO_CONTENT)
+perform_destroy   默认是模型的delete 如果说是要进行数据的逻辑删除，自己重写然后进行保存
+
+
+
+6. UpdateAPIView(更新数据的类视图，也是对单个的操作，路径中要带个pk) 继承自GenericAPIView，  mixins.UpdateModelMixin,
+UpdateAPIView实现了put   patch的方法。调用了update，partial_update
+
+mixins.UpdateModelMixin,中有update，perform_update，partial_update方法，update获取对象，合法验证，验证完之后执行更新，对应的是put方法，perform_update中做了save（）。partial_update差量更新（部分更新），对应的是patch方法
+
+
+
+
+7. ListCreateAPIView（获取列表数据，创建数据的类视图）继承自GenericAPIView，  mixins.ListModelMixin   ，mixins.CreateModelMixin
+ListCreateAPIView实现了get，post 
+
+
+
+8. RetrieveUpdateAPIView（获取单个数据和更新单个数据的类视图）
+继承自GenericAPIView，mixins.UpdateModelMixin,mixins.RetrieveModelMixin 
+RetrieveUpdateAPIView实现了get，put，patch
+
+
+
+
+9. RetrieveDestroyAPIView （获取单个数据，删除单个数据的类视图）
+继承自GenericAPIView，mixins.RetrieveModelMixin ，mixins.DestroyModelMixin,
+RetrieveDestroyAPIView 实现了get ，delete
+
+
+
+10. RetrieveUpdateDestroyAPIView（获取单个数据，更新单个数据，删除单个数据的类视图）
+继承自GenericAPIView，mixins.RetrieveModelMixin ，mixins.DestroyModelMixin,  mixins.UpdateModelMixin,
+RetrieveUpdateDestroyAPIView实现了get put patch delete
+
+
+APIView的类视图代码：（用上面的类实现的，用不同的类实现的功能会不一样，所以，如果要实现一些功能，对于其他的一些功能不想实现的，就可以选择继承不同的类来使用。比如：ListCreateAPIView实现了get，post。UpdateAPIView实现了put，patch的方法）
+序列化serializers.py 中：
+class GameSerializer(serializers.HyperlinkedModelSerializer):
+    class Meta:
+        model=Game
+        fields=('url','g_name','g_price')
+
+views.py 中：
+class GamesView(ListCreateAPIView):
+    serializer_class = GameSerializer
+    queryset = Game.objects.all()
+
+
+class GameView(RetrieveUpdateDestroyAPIView):
+    serializer_class = GameSerializer
+    queryset = Game.objects.all()
+
+urls.py 中：
+path('games/',views.GamesView.as_view()),
+path('games/<int:pk>/',views.GameView.as_view(),name='game-detail'),
+
+
+
+
+
+
+
+
+
+
+
+
+-----------------------------------------------------
+viewsets
+viewsets中 有GenericViewSet，   ViewSetMixin     ViewSet    ReadOnlyModelViewSet   ModelViewSet
+GenericViewSet继承自generics.GenericAPIView（是上面的APIView的子类generics包）和ViewSetMixin
+ViewSetMixin
+ViewSetMixin重写了as_view() ,（as_views和路由对接的）
+
+
+ViewSet
+ViewSet继承自ViewSetMixin, views.APIView， ViewSet默认啥都不支持，需要自己手动实现
+
+
+ReadOnlyModelViewSet
+只读的模型（get）的视图集合，继承自mixins.RetrieveModelMixin,  mixins.ListModelMixin,GenericViewSet，
+
+
+
+ModelViewSet
+直接封装对象的所有操作，继承自
+mixins.CreateModelMixin,mixins.RetrieveModelMixin,mixins.UpdateModelMixin,mixins.DestroyModelMixin,mixins.ListModelMixin, GenericViewSet
+
+
+
+
+
+
+
+
+
+用户模块（在pycharm中E:\pycharm程序\DjangoREST\UserAuthAndPermission可查看代码）
+1. 用户注册  
+数据开始（模型，数据库）
+创建用户，用户有不同身份（管理员，普通用户，已经删除的用户）
+注册实现：添加了超级管理员的生成（在创建的时候判断是否在超级管理员的列表中）
+
+2. 用户登陆
+  验证用户名密码
+  生成用户令牌（用户登陆的时候生成令牌   token）
+现在要登陆与注册公用一个post的url路径，出现了冲突，所以可以添加action， 即path/?action=login与path/?action=register两种情况进行区分，通过query_params获取查询参数来判断执行login还是register
+
+
+
+
+3. 用户认证（就是判断用户是否登录，有些东西只允许登陆的用户进行）
+继承BaseAuthentication 类，重写认证类
+BaseAuthentication 类中的authenticate函数用来认证（判断用户是否登陆），认证成功会返回一个元组，以一个元素是user，第二个是令牌（token），成功之后，用户会存储在request.user ，令牌会存储在request.auth。认证失败返回None。
+代码：（自己创建的auth.py中）
+class UserAuth(BaseAuthentication):
+
+    def authenticate(self, request):
+        if request.method=='GET':
+            token=request.query_params.get('token')
+            try:
+                u_id=cache.get(token)
+                uesr=UserModel.objects.get(pk=u_id)
+                return uesr,token
+            except:
+                return
+
+
+4. 用户权限（判断是不是超级管理员）
+继承自BasePermission类
+BasePermission中的has_permission函数用来判断是否具有权限，返回False不具有权限，True具有权限
+代码（自己创建的permission.py中）：
+class IsSuperUser(BasePermission):
+    def has_permission(self, request, view):
+        if request.method=='GET':
+            if isinstance(request.user,UserModel):
+                return request.user.is_super
+            else:
+                return False
+        return True
+
+
+用户认证和权限直接配置在视图函数上就OK了（ authentication_classes = (UserAuth,)，permission_classes = (IsSuperUser,)），在dispatch里面initial中就执行了，在分发之前就执行了
+
+
+
+
+
+
+
+
+	
+
+
+
+
+
+
+----------------------------------
+需求： 级联数据加上一个频率控制
+做用户和收货地址，
+
+
+
+分析：
+数据开始，模型定义，用户和地址是一对多的关系（ForeignKey）
+序列化，级联数据如何实现??
+代码：(实现级联数据的序列化)
+model.py
+ a_user=models.ForeignKey(UserModel,related_name='address_list',on_delete=models.CASCADE,null=True,blank=True)
+
+serializers.py
+class AddressSerializer(serializers.HyperlinkedModelSerializer):
+    class Meta:
+        model=Address
+        fields=('url','id','a_address')
+
+class UserSerializer(serializers.HyperlinkedModelSerializer):
+    address_list=AddressSerializer(many=True,read_only=True)
+    class Meta:
+        model=UserModel
+        fields=('url','id','u_name','u_password','address_list')
+
+
+节流（在throttle.py中）
+类BaseThrottle 
+allow_request 判断的核心，是否允许的核心（在BaseThrottle 中是抽象的方法）
+get_ident  获取客户端唯一标识
+wait  
+
+BaseThrottle 的子类SimpleRateThrottle
+get_cache_key  获取缓存的标识
+get_rate   获取频率
+parse_rate     转换频率（num/duration）(duration  ---->> s  m   h   d)
+allow_request     重写的方法，是否允许请求
+throttle_success    允许请求，然后进行请求记录
+throttle_failure    不允许请求
+wait          还有多少时间之后允许
+
+
+
+
+SimpleRateThrottle的子类AnonRateThrottle
+get_cache_key   获取缓存key的原则
+
+
+
+SimpleRateThrottle的子类UserRateThrottle
+和AnonRateThrottle一摸一样
+
+
+
+SimpleRateThrottle的子类ScopedRateThrottle
+和UserRateThrottle一样
+多写了 从 属性中获取频率
+
+
+
+
+
+
+
+
+
+使用节流
+在settings中配置，如果不想设置为全局的节流，可以用throttle_classes = (UserThrottle,)在视图函数中配置，则在settings中就不需要配置'DEFAULT_THROTTLE_CLASSES'，只需  配置'DEFAULT_THROTTLE_RATES'
+REST_FRAMEWORK={
+    # 'DEFAULT_THROTTLE_CLASSES':(
+    #     'App.throttles.UserThrottle',
+    # ),
+    'DEFAULT_THROTTLE_RATES':{
+        'user':'5/m',
+    },
+}
+没有用restful_framework的节流器，自己写的节流器（throttles.py）,也要继承自SimpleRateThrottle。重写get_cache_key方法
+class UserThrottle(SimpleRateThrottle):
+    scope= 'user'
+
+    def get_cache_key(self, request, view):
+        if isinstance(request.user,UserModel):
+            ident = request.auth
+        else:
+            ident = self.get_ident(request)
+
+        return self.cache_format % {
+            'scope': self.scope,
+            'ident': ident
+        }
+
+
+
+
+
+-------------------------------------------------------------
+RESTful总结
+
+django-rest-framework
+1. serializers    提供的功能：序列化与反序列化，扩展了级联模型获取，添加级联字段，级联字段的key原来必须就是存在的，默认是一个值，也可以在模型中自定义related_name
+2. APIView     提供的功能：类视图（CBV）实现各种请求的处理（dispatch及APIView的子类）
+3. mixins模块     增删改查    实现对模型的操作
+4. viewsets模块      对APIView和Mixins的高度封装，可以对接router
+5. router     用了DefaultRouter    可以直接批量注册路由（你注册了一个，但实际上他帮你注册了一批）
+6. authentication（认证）     APIView中会自动认证    自己创建认证类，实现认证方法，认证成功返回元组，用户和令牌。认证失败，request中就不是我们的用户了，有一个默认值
+7. permission（权限）    添加权限控制     用户所拥有的权限
+8. throttle（节流）     控制访问频率    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+------------
+端
+用户端
+公司自己的后台
+如果有商家，还有商家端
+
+
+
+
+
+后台管理(可以在pycharmE:\pycharm程序\RestEnd中查看代码)
+快速实现自己的后台
+django内置模型  （用户  组）
+也有第三方的：xadmin，suit  ........
+
+
+添加自己的模型：在admin.py 中注册admin.site.register(xxx)
+如果感觉默认的站点管理样式不能满足应用需求，开发者可以通过继承django定义的管理员数据模型，模板，站点类来开发出个性化的管理员站点
+注册的时候加自己的管理类
+
+创建管理类(要继承自admin.ModelAdmin)
+class StudentAdmin（admin.ModelAdmin）
+注册管理类
+admin.site.register(Students,StudentAdmin)
+
+个性化规则
+显示规则  
+list_display    显示字段
+list_filter     过滤字段
+search_fields    搜索字段
+list_per_page    分页，每页显示多少条数据
+ordering        排序规则
+分组显示
+    fieldsets = [
+        ("基本信息",{"fields":['s_name','s_age','s_sex']}),
+        ("可选信息",{"fields":['s_height','s_weight']}),
+    ]
+
+
+修改规则
+fields   显示的字段
+exclude    不显示的字段
+
+
+
+布尔值定制显示
+比如性别，在list_display的时候可以传递一个函数（在类里创建这个函数）
+def  sex（self）：
+       if self.s_sex:
+	return '男'
+       else：
+	return  ‘女’
+
+list_display=('sname','sage',sex)
+设置显示的标题
+sex.short_description='性别'
+
+
+
+可以在创建班级的时候插入三个学生
+class StudentInfo(admin.TabularInline):
+    extra = 3
+    model = Student
+
+class GradeAdmin(admin.ModelAdmin):
+    inlines = [StudentInfo]
+
+admin.site.register(Grade,GradeAdmin)
+这样在创建班级的时候就会要插入三个学生
+
+
+
+
+
+个性化定制（改样式）
+可以把页面的样子改了，个性化定制它
+只需把原来的复制过来，把样式改成想要的样子就行了，里面的逻辑代码不改，只改模板
+在django/contrib/admin/templates/admin中，将需要的模板复制出来，在自己的工程中创建相应的子目录，在settings中注入模板路径，子模版继承自复制的模板，添加自己的代码
+
+
+
+
+
+定制站点信息（按钮.....等等）
+定制整个站点的信息，所有的注册都要改，路由也要换成自己的
+在admin中继承自AdminSite
+class Myadmin(admin.AdminSite):         可以在自己的类中定制站点的各种信息
+    site_title = 'zxzx'
+
+site=Myadmin()          创建一个对象
+注册模型的时候也要写自己的   site.register(Grade,GradeAdmin)
+还有在根路由中的    # path('admin/', admin.site.urls),
+也要改成自己的    path('admin/', site.urls),
+
+
+
+
+
+
+
+
+第三方后台管理django-suit
+安装：pip install  django-suit
+在INSTALLED_APPS 中配置‘suit’，要配置在'django.contrib.admin'之前，然后在TEMPLATES的option中添加'django.template.context_processors.request',就可以使用了，其他的设置和django内置的后台管理一样（创建超级管理员，创建模型，在admin中注册模型......）
+
+
+
+
+
+对于对suit的页面的定制可以查看文档https://django-suit.readthedocs.io/en/develop/
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+以上视频到此结束，视频地址https://www.bilibili.com/video/av57516522
+---------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

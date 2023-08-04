@@ -1,0 +1,293 @@
+一、镜像：
+
+拉取镜像：docker pull 镜像名字
+查看现有镜像：docker image ls  或者 docker images     
+	   docker images -a  
+	   docker images -q
+	   docker images -aq
+删除镜像：docker image rm 镜像id
+
+镜像的导入导出：
+镜像的导入和导出，在工作中经常使用。
+比如公司来了一个新同事，也会Docker，你正好自己制作了一个公司内部的镜像，就可以把你机器上的镜像导出给他。
+他拿到镜像之后直接导入，就可以进行开发了，好处是你们的开发环境基本统一了。
+
+导出：docker image save
+比如现在要导出镜像中的busybox镜像，可以这样写命令。docker image save busybox:latest -o mybusybox.image
+save是导出/保存的意思，busybox:latest是镜像名称+版本号， -o代表输出，mybusybox.image是导出后镜像的名字。
+
+导入镜像：docker image load -i .\mybusybox.image
+
+
+
+Docker search  镜像名    搜索镜像是否在远程仓库
+Docker search  镜像名  --limit 条数    只显示几条
+
+Docker system df  查看docker镜像/容器/等占用情况
+
+
+Docker rmi 镜像名/id   删除镜像   加 -f 强制删除
+
+docker rmi -f $(docker images -aq)   删除全部
+
+仓库名，tag都是<none>的是虚悬镜像，建议删除
+
+
+*********** Dockerfile **************
+Dockerfile是用于构建docker镜像的文件
+Dockerfile里包含了构建镜像所需的”指令“
+Dockerfile有其特定的语法规则（重要学习）
+
+创建镜像：
+docker image build -t 镜像名 .  （注意最后有个点）
+docker image build -f dockerfile文件名  -t  镜像名 .
+
+
+向docker hub上上传自己的镜像
+上传属于自己的镜像，需要遵守社区规则，就是用户ID/镜像名称。可以最简单的方法，就是重新build一个镜像，镜像名称符合社区规则就可以了。
+docker image build -t zhaoxii/hello .
+
+也可以通过docker image tag 命令，具体语法如下：
+docker image tag <old image name > <new iamge name>
+
+例如把jspang这个镜像，改为jspangcom/jspang镜像,命令可以如下：
+docker image tag jspang jspangcom/jspang
+
+在推送前，需要先登录Dockerhub账号,登录命令如下：
+docker login
+然后：
+docker image push zhaoxii/hello
+输入完命令，就会给我们进行push到Dockerhub上了
+
+
+
+创建私有镜像库
+
+
+
+
+
+
+Dockerfile语法：
+FROM： 
+它的意思是选择一个基础镜像
+
+RUN:  
+RUN是Dockerfile中一个重要的指令，它可以执行Shell指令，包括下载文件、安装软件、配置环境.....都是可以的
+也可以执行exec形式的指令 例如：['python','manage.py','runserver']
+在镜像build的时候执行
+
+
+COPY,ADD:
+制作镜像的时候，经常需要向镜像里添加文件。在Dockerfile中有两个命令可以向镜像中添加文件COPY和ADD
+COPY和ADD命令，在复制普通文件的时候，并没有什么太大的不同，两个命令都可以把本地文件，复制到镜像里。（如果复制的路径不存在，则会自动创建）
+
+ADD 构建镜像和COPY最直观的一点不同，是ADD命令可以直接解压gzip压缩文件，这当我们有很多文件要上传操作的时候，就会变的简单很多。
+
+WORKDIR:
+写Dockerfile文件时，默认的操作目录，是镜像的根目录。
+但有时候需要拷贝很多内容到镜像里是二级目录，就可以使用WORKDIR命令。把工作目录切换到二级，WORKDIR命令像我们操作linux下的cd命令。
+
+ARG,ENV:
+它们都可以用来设置一个“变量”
+注意在写变量时，值不要有任何的空格，否则在打包时会失败。
+
+ARG和ENV有两点不同，第一点是声明变量的作用域不同，第二点是ARG声明后，可以在构建时修改变量。
+
+CMD：
+当设置好基础环境，安装完对应软件，处理完文件后。有时候需要启动某个默认命令。CMD用来设置容器启动时默认会执行的命令。和RUN相似，RUN是在build的时候运行，CMD是在run的时候运行
+
+docker system prune -f 批量删除不再使用的容器 , 注意这个是批量删除已经退出的容器（Exited state）。
+
+同样可以使用下面的命令，删除没有使用的所有镜像。 docker image prune -a   (这个命令是删除所有虚悬镜像)
+
+CMD命令在使用时，有三个基本原则需要我们遵守。
+
+容器启动时默认执行的命令
+如果docker container run启动容器时指定了其它命令，则CMD命令会被忽略
+如果定义多个CMD，只有最后一个CMD执行
+
+ENTRYPOINT:
+ENTRYPOINT也可以设置容器启动时要执行的命令。
+
+CMD设置的命令，可以在 docker container run 时传入其它命令，覆盖掉 CMD 的命令，但是ENTRYPOINT所设置的命令时一定会被执行的。
+
+ENTRYPOINT 和 CMD 可以联合使用， ENTRYPOINT 设置执行的命令，CMD传递参数。
+
+VOLUME:
+容器删除掉后，里边的数据也会跟着删除。数据的保存和重复可用这是最基本的要求，
+也就是常说的数据持久化。在写Dockerfile的时候可以用VOLUME命令，指定数据持久化。
+
+
+EXPOSE  当前容器暴露出的端口
+
+
+MAINTAINER   镜像维护者的姓名和邮箱
+
+
+
+
+
+二、容器：
+
+查看正在运行的容器：docker container ps
+查看所有的容器：docker container ps -a
+
+停止一个容器：docker kill 容器id
+
+删除一个容器的命令：docker rm 容器id   加个-f强制删除
+
+查看所有容器的id，包括没有开启的：docker container ps -aq
+停止多个容器：docker container stop $(docker container ps -qa)
+删除多个容器：docker container rm $(docker container ps -aq)
+
+
+
+启动docker：
+前台运行模式：docker container run -p 80:80 nginx（镜像名称）    attached模式
+后台运行模式：docker container run -d -p 90:80 nginx（镜像名称），把docker的80端口映射到服务器的90端口    detached模式
+第一个端口是映射到服务器本机的端口;第二个端口是Docker容器使用的端口，nginx的端口是80
+
+不知道容器提供的端口就需要用下面的命令查看容器提供的端口。
+docker container inspect --format '{{.Config.ExposedPorts}}' <ContainerID>
+docker container inspect <Contaienr ID>     查看容器的情况
+
+Docker container run nginx --name 容器名    --name给容器起个名字 
+
+docker start 容器ID   启动已经停止运行的容器
+
+
+
+后台转前台： docker attach 容器id
+
+后台运行时，查看日志：docker container logs 容器id
+跟踪日志：docker container logs -f <ID or Image name>
+
+
+启动交互模式：docker container run -it ubuntu/容器id sh
+-it代表启用交互模式，sh代表可以使用Shell脚本。当你输入这个脚本后，Docker就会进入到交互模式。
+可以使用ls来得到目录下的文件，也可以使用hostname来查看计算机名称。
+这时候你想退出容器和交互模式可以输入exit命令。
+需要重点说明的是，随着命令退出后，容器也会跟着退出，变成Exited模式。
+
+
+
+detached模式下的交互：docker exec -it <ID or Image name> sh 
+exec是执行的意思，-it交互模式 ， sh交互的方式，用shell脚本进行交互
+
+这种模式的优点是，再使用exit退出后，服务并不会停止，而只是退出了交互模式。
+可以自己尝试一下退出，然后使用docker container ls -a来查看一下容器的状态，你会发现依然是 up状态。
+
+
+
+
+
+docker cp  容器id  docker路径  目的机路径    将docker内的文件拷贝到外面
+
+
+docker export 容器id  > a.tar  将容器导出
+cat a.tar | docker  import  路径       导入容器
+
+
+
+Docker commit 提交容器副本使之成为一个新的镜像
+Docker commit -m "要提交的信息"  -a "作者"  容器id  要创建的目标镜像名:[标签名]
+
+
+
+容器数据卷
+实现数据持久化
+docker run -it --privileged=true -v /宿主机绝对路径：/容器内目录   镜像名
+上面一条命令可以将容器中的某个路径下的文件在宿主机的目录下持久化，在容器的该路径下的内容会实时同步到宿主机，
+在宿主机下该路径下的内容也会同步到容器，总之，这两个路径下的内容会实时同步，数据共享
+--privileged=true 容器数据卷的权限开启
+-v   后面跟映射的路径
+
+查看数据卷是否挂载成功： docker inspect 容器id
+
+
+
+docker run -it --privileged=true -v /宿主机绝对路径：/容器内目录:rw   镜像名
+docker run -it --privileged=true -v /宿主机绝对路径：/容器内目录:ro   镜像名  
+默认是rw，ro是限制容器中是只读，主机不会被限制
+
+
+docker run -it --privileged=true --volumes-from 容器名/id   镜像名
+--volumes-from 继承某个容器数据卷
+
+
+
+
+安装mysql，redis注意备份数据(配置文件，日志，数据库)(使用容器数据卷)和中文乱码问题
+
+
+
+
+
+
+
+三、docker-compose
+
+docker-compose.yml文件
+
+实现对docker容器集群的编排
+
+
+常用命令：
+Docker-compose up  启动所有docker-compose 服务 
+Docker-compose -h  查看帮助
+Docker-compose up  -d   启动所有docker-compose 服务并后台运行 
+Docker-compose  down    停止并删除容器，网络，卷，镜像
+
+
+
+
+
+
+
+
+
+
+
+
+
+四、docker网络
+
+查看本地docker的网络情况   docker network ls
+
+创建一个网络       docker network  create  网络名字
+
+删除一个网络       docker network  rm    网络名字
+
+可通过docker network --help查看其他命令
+
+
+
+四种网络模式：
+bridge
+host
+none
+container
+
+
+自定义网络：
+docker network create 网络名字
+
+新建容器要加入自己定义的网络时，要指定  --network 参数
+例如： docker run -d -p 8000:8000 --network my_network  nginx
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+https://jspang.com/detailed?id=75#toc326
+https://www.bilibili.com/video/BV1gr4y1U7CY?p=33

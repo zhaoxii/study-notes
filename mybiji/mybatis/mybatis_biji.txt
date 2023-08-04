@@ -1,0 +1,684 @@
+
+mybatis的包
+
+<dependency>
+	<groupId>org.mybatis</groupId>
+	<artifactId>mybatis</artifactId>
+	<version>3.5.7</version>
+</dependency>
+
+
+
+
+mybatis配置文件
+
+<configuration>
+
+    <!--
+    mybatis配置文件中标签配置的顺序：
+    The content of element type "configuration" must match
+    "(properties?,settings?,typeAliases?,typeHandlers?,objectFactory?,
+    objectWrapperFactory?,reflectorFactory?,plugins?,environments?,
+    databaseIdProvider?,mappers?)".
+    -->
+
+    <!--    引入properties文件，可以在配置文件中通过${key}的方式访问数据-->
+    <properties resource="jdbc-config.properties"/>
+
+    <typeAliases>
+        <!--        package 指定哪个包下的类可以使用别名，别名为类名，
+                com.zhaoxi.mybatis.pojo 包下所有的类拥有默认的别名，别名为类名，且不区分大小写
+        -->
+        <package name="com.zhaoxi.mybatis.pojo"/>
+
+        <!--        typeAlias给类型起别名，在mybatis中可以使用别名代表某个类型
+                    不指定alias属性时，别名为类名，且不区分大小写
+        -->
+        <!--        <typeAlias type="com.zhaoxi.mybatis.pojo.User" alias="abc"></typeAlias>-->
+        <!--        <typeAlias type="com.zhaoxi.mybatis.pojo.User"></typeAlias>-->
+    </typeAliases>
+
+
+    <environments default="development"> <!--default="development" 默认环境-->
+        <environment id="development">
+            <!--            transactionManager 设置事务管理器
+                属性：
+                type: 设置事务管理的方式
+                type = JDBC、MANAGED
+                JDBC是使用jdbc中原生的事务管理方式
+                MANAGED 被管理。 例如 spring
+            -->
+            <transactionManager type="JDBC"/>
+
+            <!--          dataSource 数据源
+              type 设置数据源的类型
+              POOLED、UNPOOLED、JNDI
+              POOLED 表示 使用数据库连接池
+              UNPOOLED 表示不使用数据库连接池 ，每次获取链接都重新创建连接
+              JNDI 表示使用上下文中的数据源
+              -->
+            <dataSource type="POOLED">
+                <property name="driver" value="${jdbc.driver}"/>
+                <property name="url" value="${jdbc.url}"/>
+                <property name="username" value="${jdbc.username}"/>
+                <property name="password" value="${jdbc.password}"/>
+            </dataSource>
+        </environment>
+
+        <environment id="test">
+            <transactionManager type="JDBC"/>
+            <dataSource type="POOLED">
+                <property name="driver" value="com.mysql.jdbc.Driver"/>
+                <property name="url" value="${}"/>
+                <property name="username" value="root"/>
+                <property name="password" value="123456"/>
+            </dataSource>
+        </environment>
+    </environments>
+
+    <!--    引入mybatis的映射文件-->
+    <mappers>
+        <!--        <mapper resource="mappers/UserMapper.xml"/>-->
+
+        <!--        package 引入映射文件
+            要求，xml映射文件的包与mapper接口所在包一样。然后xml映射文件的名称与mapper接口的名称一样
+        -->
+        <package name="com.zhaoxi.mybatis.mapper"/>
+    </mappers>
+
+
+</configuration>
+
+
+
+
+
+mybatis获取参数
+#{}   占位符赋值
+${}    字符串拼接，需要注意加引号
+
+
+1、当只有一个参数时，用任意名称都可以取到值。
+
+
+2、当有多个参数时，使用param1,param2... 或者 arg0,arg1....获取参数
+例如：User checkLogin(String username, String password);不能通过username和password 获取参数
+
+3、当传入一个map集合时，通过map中的key获取值
+
+
+4、当传入一个实体类对象时，例如User user对象。可以直接通过属性名称获取参数。 属性名跟set方法有关
+
+
+5、当使用@Param注解传入时，使用注解中的值获取参数，
+
+
+
+
+查询数据
+@mapkey 注解可将查询出的多条数据放入一个更大的map中。
+@MapKey("id")
+Map<String, Object> getAllUserToMap();
+
+
+
+
+-------------------------------------------------------------------------
+动态设置表名
+
+select * from #{tablename} 会自动加单引号，不对
+select * from ${tablename}
+
+
+
+
+
+
+添加功能获取自增的主键
+<insert id="InsertUser" useGeneratedKeys="true" keyProperty="id">
+
+	insert into t_user values (null,#{username},#{password},#{age},#{gender},#{email})
+
+</insert>
+
+useGeneratedKeys="true"   表示使用自增的主键
+keyProperty="id"         将自增的主键赋值给实体类参数的属性
+
+
+
+
+-----------------------------------------------------------
+数据库字段名与属性名不一致的情况处理：
+
+1、为查询的字段名设置别名，与属性名保持一致
+
+
+2、下划线与驼峰命名映射
+
+在mybatis配置文件中进行配置
+<settings>
+	<setting name="mapUnderscoreToCamelCase" value="true"/>
+</settings>
+
+
+3、使用resultMap自定义映射处理
+
+resultType 和 resultMap 之间只能同时使用一个。
+
+<resultMap id="emp" type="Emp">          id属性是唯一标识  type是实体类类型
+	<id column="emp_id" property="empId"></id>
+	<result column="emp_name" property="empName"></result>
+</resultMap>
+
+
+id标签是处理主键的映射关系
+result标签是处理普通字段的映射
+column 属性是数据库的字段名
+property属性是类的属性名
+
+
+
+
+
+--------------------------------------------------------
+多对一查询时：
+
+public class Emp {
+
+    private Integer empId;
+
+    private String empName;
+
+    private Integer age;
+
+    private String gender;
+
+    private Dept dept;
+}
+
+public class Dept {
+
+
+    private Integer deptId;
+
+    private String deptName;
+
+}
+
+
+此时，emp中员工有一个属性是dept类型的，在resultmap中可以通过对象.属性名映射
+<resultMap id="emp" type="com.zhaoxi.mybatis.pojo.Emp">
+	<id column="emp_id" property="empId"></id>
+	<result column="emp_name" property="empName"></result>
+	<result column="dept_id" property="dept.deptId"></result>
+	<result column="dept_name" property="dept.deptName"></result>
+</resultMap>
+
+使用association也可进行多对一的映射
+<resultMap id="emp" type="com.zhaoxi.mybatis.pojo.Emp">
+	<id column="emp_id" property="empId"></id>
+	<result column="emp_name" property="empName"></result>
+	<result column="age" property="age"></result>
+	<result column="gender" property="gender"></result>
+	<association property="dept" javaType="com.zhaoxi.mybatis.pojo.Dept">
+		<result property="deptId" column="dept_id"></result>
+		<result property="deptName" column="dept_name"></result>
+	</association>
+</resultMap>
+
+
+分步查询
+<resultMap id="emp" type="com.zhaoxi.mybatis.pojo.Emp">
+	<id column="emp_id" property="empId"></id>
+	<result column="emp_name" property="empName"></result>
+	<result column="age" property="age"></result>
+	<result column="gender" property="gender"></result>
+	<association property="dept" select="第二步查询的sql的唯一标识" column="将查询出的某个字段传递过去" fetchType="eager|lazy  指定是延迟加载还是立即加载"></association>
+</resultMap>
+
+
+
+
+分步查询的优点：可以实现延迟加载，懒加载
+需要在配置文件中配置<setting name="lazyLoadingEnabled" value="true"/> 开启延迟加载。延迟加载的全局开关。当开启时，所有关联对象都会延迟加载。 
+特定关联关系中可通过设置 fetchType 属性来覆盖该项的开关状态。
+
+aggressiveLazyLoading 按需加载，开启时，任一方法的调用都会加载该对象的所有属性。 否则，每个属性会按需加载
+
+
+
+
+
+
+
+
+
+
+
+---------------------------------------------------------
+一对多查询
+
+public class Dept {
+
+
+    private Integer deptId;
+
+    private String deptName;
+
+    private List<Emp> empList;
+
+}
+
+public class Emp {
+
+    private Integer empId;
+
+    private String empName;
+
+    private Integer age;
+
+    private String gender;
+
+    private Dept dept;
+}
+
+<resultMap id="getDeptAndEmp" type="com.zhaoxi.mybatis.pojo.Dept">
+
+	<id column="dept_id" property="deptId"></id>
+	<result column="dept_name" property="deptName"></result>
+	<collection property="empList" ofType="emp">
+		<id property="empId" column="emp_id"></id>
+		<result property="empName" column="emp_name"></result>
+		<result property="age" column="age"></result>
+		<result property="gender" column="gender"></result>
+	</collection>
+
+</resultMap>
+
+<select id="getDeptAndEmpByDeptId" resultMap="getDeptAndEmp">
+	select * from t_dept left join t_emp on t_dept.dept_id = t_emp.dept_id where t_dept.dept_id = #{deptId}
+
+</select>
+
+
+1、通过collection标签可以将一对多时的集合进行处理。 ofType属性是集合中元素的类型。
+
+
+
+2、分步查询（与多对一类似）
+
+
+<resultMap id="deptAndEmpResultMapStepOne" type="dept">
+	<id column="dept_id" property="deptId"></id>
+	<result column="dept_name" property="deptName"></result>
+	<collection property="empList" select="com.zhaoxi.mybatis.mapper.EmpMapper.getDeptAndEmpByStepTwo"
+				column="dept_id" fetchType="eager"></collection>
+</resultMap>
+
+<select id="getDeptAndEmpByStepOne" resultMap="deptAndEmpResultMapStepOne">
+	select * from t_dept where dept_id = #{deptId}
+</select>
+
+
+<select id="getDeptAndEmpByStepTwo" resultType="com.zhaoxi.mybatis.pojo.Emp">
+	select * from t_emp where dept_id = #{deptId}
+</select>
+
+
+
+
+分步查询的优点：可以实现延迟加载，懒加载
+需要在配置文件中配置<setting name="lazyLoadingEnabled" value="true"/> 开启延迟加载。延迟加载的全局开关。当开启时，所有关联对象都会延迟加载。 
+特定关联关系中可通过设置 fetchType 属性来覆盖该项的开关状态。
+
+aggressiveLazyLoading 按需加载，开启时，任一方法的调用都会加载该对象的所有属性。 否则，每个属性会按需加载
+
+
+
+
+
+
+
+
+
+
+
+------------------------------------------------------------------------------------------------------------------------------------
+动态sql
+
+if标签
+
+where标签
+
+trim标签
+
+choose、when、otherwise标签
+
+foreach标签
+
+sql标签
+
+
+include标签
+
+
+------------------------------------------------------------------------------------------------------------------------------------
+一级缓存
+mybatis的一级缓存是sqlsession级别的，即通过同一个sqlsession查询的数据会被缓存
+再次使用同一个sqlsession查询同一条数据，会从缓存中获取
+一级缓存失效的情况：
+1、不同的sqlsession对应不同的一级缓存
+2、同一个sqlsession但是查询条件不同
+3、同一个sqlsession两次查询期间执行了任何一次增删改操作。（增删改会清空缓存）
+4、同一个sqlsession两次查询期间手动清空了缓存 sqlSession.clearCache();
+
+
+一级缓存是默认开启的。
+
+
+
+------------------------------------------------------------------------------------------------------------------------------------
+二级缓存
+
+mybatis的二级缓存是SqlSessionFactory级别的，即通过同一个SqlSessionFactory创建的sqlsession查询的结果会被缓存，
+此后若再次执行相同的查询语句，结果就会从缓存中获取
+
+
+二级缓存开启的条件：
+1、在核心配置文件中，设置全局配置属性cacheEnabled=true,默认为true，不需要设置
+2、在映射文件中设置标签<cache />
+3、二级缓存必须在SqlSession关闭或提交之后有效。
+4、查询的数据所转换的实体类类型必须实现序列话接口
+
+二级缓存失效的情况：
+两次查询之间执行了任意的增删改，会使一级和二级缓存同时失效。
+
+
+
+二级缓存的相关配置
+在mapper配置文件中添加的cache标签可以设置一些属性：
+
+eviction属性：缓存回收策略，默认是LRU。
+。。。
+
+
+mybatis的缓存查询顺序
+先查二级缓存，因为二级缓存可能会有其他程序已经查询出来的数据，可以直接拿来使用。
+如果二级缓存没命中，在查询一级缓存，如果一级缓存也没命中，查询数据库。
+sqlsession关闭后，一级缓存的数据会写入二级缓存
+
+
+
+
+------------------------------------------------------------------------------------------------------------------------------------
+整合第三方缓存EHcache
+
+依赖；
+<dependency>
+	<groupId>org.mybatis.caches</groupId>
+	<artifactId>mybatis-ehcache</artifactId>
+	<version>1.2.3</version>
+</dependency>
+
+mybatis 整合ehcache的jar包
+
+
+<!--    slf4j日志门面的一个具体实现    -->
+<dependency>
+	<groupId>ch.qos.logback</groupId>
+	<artifactId>logback-classic</artifactId>
+	<version>1.2.3</version>
+</dependency>
+
+
+cache标签中设置 type属性，使用第三方缓存。
+<cache type="org.mybatis.caches.ehcache.EhcacheCache" />
+
+
+
+------------------------------------------------------------------------------------------------------------------------------------
+mybatis的逆向工程
+正向工程：先创建java实体类，由框架负责根据实体类生成数据库表。hibernate是支持正向工程的。
+逆向工程：先创建数据库表，由框架负责根据数据库表，反向生成如下资源。
+1、java实体类
+2、mapper接口
+3、Mapper映射文件
+
+
+创建逆向工程的步骤：
+
+
+1、引入依赖和插件
+
+<dependencies>
+
+	<dependency>
+		<groupId>log4j</groupId>
+		<artifactId>log4j</artifactId>
+		<version>1.2.17</version>
+	</dependency>
+
+	<dependency>
+		<groupId>mysql</groupId>
+		<artifactId>mysql-connector-java</artifactId>
+		<version>5.1.49</version>
+	</dependency>
+	
+<!-- https://mvnrepository.com/artifact/org.mybatis/mybatis -->
+	<dependency>
+		<groupId>org.mybatis</groupId>
+		<artifactId>mybatis</artifactId>
+		<version>3.5.13</version>
+	</dependency>
+
+	<dependency>
+		<groupId>junit</groupId>
+		<artifactId>junit</artifactId>
+		<version>4.13.2</version>
+		<scope>test</scope>
+	</dependency>
+
+</dependencies>
+
+<build>
+	<plugins>
+		<plugin>
+			<groupId>org.mybatis.generator</groupId>
+			<artifactId>mybatis-generator-maven-plugin</artifactId>
+			<version>1.3.0</version>
+
+			<dependencies>
+				<dependency>
+					<groupId>org.mybatis.generator</groupId>
+					<artifactId>mybatis-generator-core</artifactId>
+					<version>1.3.2</version>
+				</dependency>
+
+				<dependency>
+					<groupId>mysql</groupId>
+					<artifactId>mysql-connector-java</artifactId>
+					<version>5.1.49</version>
+				</dependency>
+			</dependencies>
+
+		</plugin>
+	</plugins>
+</build>
+
+
+2、创建逆向工程的配置文件
+GeneratorConfig.xml
+
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE generatorConfiguration
+        PUBLIC "-//mybatis.org//DTD MyBatis Generator Configuration 1.0//EN"
+        "http://mybatis.org/dtd/mybatis-generator-config_1_0.dtd">
+<!--上面爆红可以不用管-->
+<generatorConfiguration>
+    <!--
+    targetRuntime: 执行生成的逆向工程的版本
+    MyBatis3Simple: 生成基本的CRUD（清新简洁版 增删改）
+    MyBatis3: 生成带条件的CRUD（奢华尊享版 ）
+    -->
+    <context id="DB2Tables" targetRuntime="MyBatis3">
+        <!-- 数据库的连接信息 -->
+        <jdbcConnection driverClass="com.mysql.jdbc.Driver"
+                        connectionURL="jdbc:mysql://localhost:3306/ssm"
+                        userId="root"
+                        password="123456">
+        </jdbcConnection>
+        <!-- javaBean的生成策略-->
+        <javaModelGenerator targetPackage="com.zhaoxi.mybatis.pojo" targetProject=".\src\main\java">
+            <property name="enableSubPackages" value="true"/> <!--把点解析成目录-->
+            <property name="trimStrings" value="true"/><!--去掉空格-->
+        </javaModelGenerator>
+        <!-- SQL映射文件的生成策略 -->
+        <sqlMapGenerator targetPackage="com.zhaoxi.mybatis.mapper"
+                         targetProject=".\src\main\resources">
+            <property name="enableSubPackages" value="true"/>
+        </sqlMapGenerator>
+        <!-- Mapper接口的生成策略 -->
+        <javaClientGenerator type="XMLMAPPER"
+                             targetPackage="com.zhaoxi.mybatis.mapper" targetProject=".\src\main\java">
+            <property name="enableSubPackages" value="true"/>
+        </javaClientGenerator>
+        <!-- 逆向分析的表 -->
+        <!-- tableName设置为*号，可以对应所有表，此时不写domainObjectName -->
+        <!-- domainObjectName属性指定生成出来的实体类的类名 -->
+        <table tableName="t_emp" domainObjectName="Emp"/>
+        <table tableName="t_dept" domainObjectName="Dept"/>
+    </context>
+</generatorConfiguration>
+
+
+点击maven，使用mybatis-generator:generate插件生成代码
+
+
+
+------------------------------------------------------------------------------------------------------------------------------------
+mybatis分页插件
+
+分页插件配置步骤
+
+1、在pom.xml中添加分页插件的依赖
+
+<dependency>
+    <groupId>com.github.pagehelper</groupId>
+    <artifactId>pagehelper</artifactId>
+    <version>5.2.0</version>
+</dependency>
+
+2、在mybatis的核心配置文件mybatis-config.xml中配置分页插件
+<plugins>
+    <!--设置分页插件-->
+    <plugin interceptor="com.github.pagehelper.PageInterceptor"></plugin>
+</plugins>
+
+3、使用pagehelper
+
+public class PageTest {
+
+    @Test
+    public void test1() {
+        SqlSession sqlSession = SqlSessionUtil.getSqlSession();
+        EmpMapper mapper = sqlSession.getMapper(EmpMapper.class);
+
+        EmpExample empExample = new EmpExample();
+
+        Page<Object> page = PageHelper.startPage(3, 4);// 开启分页，第一页，每页四条
+        System.out.println(page);
+        List<Emp> emps = mapper.selectByExample(empExample);
+        System.out.println(emps);
+        PageInfo<Emp> pageInfo = new PageInfo<>(emps);
+        System.out.println(pageInfo);
+
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

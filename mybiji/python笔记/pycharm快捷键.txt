@@ -1,0 +1,4 @@
+control + d 复制一行，插入到下面
+alt  +   shift  +  ↑↓ 移动一行
+crtl +/    注释多行
+crtl + y 删除一行

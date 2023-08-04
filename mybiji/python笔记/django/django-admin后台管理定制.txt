@@ -1,0 +1,87 @@
+admin显示属性的设置
+
+ModelAdmin中的属性设置
+
+admin可以设置在列表页和详情页显示的字段以及搜索字段等的限制,在admin的类中可以直接定义.
+
+以使用较多的 ModelAdmin 为例, ModelAdmin 源码中的属性有:
+
+
+# 在列表页显示的字段,默认会显示所有字段,有对应的方法可以重写
+list_display = ('__str__',)
+# 在列表页显示的字段中,可以链接到change_form页面的字段
+list_display_links = ()
+# 右侧的筛选,必须是字段,可以继承自SimpleListFilter来自定义筛选字段和规则,SimpleListFilter的方法在后面详细介绍
+list_filter = ()
+# 联表查询是否自动查询,可以是布尔,列表或元组,如果是列表或元组,则级联查询指定的字段
+list_select_related = False
+# 列表页每页展示的条数
+list_per_page = 100
+# 分页,显示全部,真是数据小于该值时才会显示全部
+list_max_show_all = 200
+# 在列表页可以编辑的字段
+list_editable = ()
+# 在列表页可以模糊搜索的字段
+search_fields = ()
+# 对Date和DateTime类型进行搜索
+date_hierarchy = None
+# 在change_form页面,按钮为,save按钮的值(save as new和save add another)
+save_as = False
+# 点击保存并继续编辑
+save_as_continue = True
+# save按钮的位置,是True则显示在页面上方
+save_on_top = False
+# 自定义分页类
+paginator = Paginator
+# 详细页面，删除、修改，更新后跳转回列表后，是否保留原搜索条件管理员现在在创建，编辑或删除对象后保留列表视图中的过滤器。
+# 可以将此属性设置为False，以恢复之前清除过滤器的行为。
+preserve_filters = True
+# 在详情页面,如果有FK到其他表,在详情页中可以动态的填加或删除级联数据
+inlines = []
+admin中action操作的设置
+admin中的action是指在列表页的动作,默认为删除所选的条目,可以自定义填加动作,将动作注册到action中,需要是一个方法
+# 定制action中的操作
+actions = []
+action_form = helpers.ActionForm
+# action选项显示的位置,页面上方或者页面下方
+actions_on_top = True
+actions_on_bottom = False
+# 是否显示action选择的个数
+actions_selection_counter = True
+checks_class = ModelAdminChecks
+BaseModelAdmin中的属性
+除了ModelAdmin中的属性,也可以自定义在其父类BaseModelAdmin中的属性和方法,是一些通用的,在继承子BaseModelAdmin的类中也可以完成的属性设置.一般是详情页的属性.
+# 自动补全,外键查询数据多时,方便查找
+autocomplete_fields = ()
+# 详情页,针对外键和M2M字段变成input框形式
+raw_id_fields = ()
+# 详情页面展示的字段
+fields = None
+# 详情页面排除的字段,字段可以是数据库中的也可以是自定义的
+exclude = None
+# 在详情页面对数据进行分隔显示,对应到admin模板中的'fieldsets.html'
+fieldsets = None
+# 为详情页指定form表单,可以自定义显示的数据,字段
+form = forms.ModelForm
+# 下面两个是M2M显示时,数据移动选择.可以参考admin中用户的权限操作
+filter_vertical = () # 纵向展示
+filter_horizontal = () # 横向展示
+# 详情页面使用radio显示选项,FK默认使用select
+radio_fields = {}
+# 填加页面,在某字段输入值后,自动填加到指定字段
+# prepopulated_fields = {"email": ("user",)},email字段会在用户填加user字段时自动填充
+prepopulated_fields = {}
+# 详情页指定显示的插件,后面详细说明
+formfield_overrides = {}
+# 详情页面的只读字段
+readonly_fields = ()
+# 详情页面排序规则
+ordering = None
+# 禁止某些排序,为空则禁止所有的排序
+sortable_by = None
+# 编辑时是否在页面上显示view on set,可以通过方法来返回一个链接,后面说明
+view_on_site = True
+# 列表页,模糊搜索后面显示的数据个数样式
+# 为True是显示条数,为False时显示全部
+show_full_result_count = True
+checks_class = BaseModelAdminChecks

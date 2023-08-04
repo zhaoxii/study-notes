@@ -1,0 +1,2061 @@
+DB  数据库
+DBMS  数据库管理系统
+SQL   结构化查询语言
+
+
+
+
+DDL:数据定义语言 create\alter\drop\rename\truncate
+DML：数据操作语言 insert\delete\update\select
+DCL：数据控制语言 commit\ rollback \savepoint\grant\revoke
+
+
+
+
+
+
+
+
+Source sql文件   执行sql文件，导入数据
+
+
+
+
+最基本的select语句
+select ....
+Select .... From ....
+
+
+select 1 from DUAL   DUAL是伪表
+
+
+
+空值null参与运算，结果也为null
+
+着重号`` (1旁边的符号)
+
+显示表结构：describe 表名 或 desc 表名
+
+
+
+
+select 100+’1‘   ----->>>  101 隐式转换
+
+select 100+’a'  ------>>>>100  a看为0
+
+
+select 100+null  ---->>>>空值null参与运算，结果也为null
+
+
+
+
+
+= 等于
+<=>  安全等于。与=相似，唯一的区别是可以对null判断。为null而生
+<>
+
+
+Select 1='1' , 1='a' ,0='a'（字符串存在隐式转换，如果转换数值不成功，则看做0）
+
+select 'ab'='ab','a'='b'  两边都是字符串的话就按字符串比较
+
+
+select 1=null,null=null   只要null参与，结果就为null
+
+select 1<=>null, null<=>null
+
+
+
+比较运算的关键字：
+is null
+is not null
+isnull 相当于是个函数了
+
+least   最小
+greatest  最大
+ 
+between...and....
+
+not between  and 
+
+in
+
+Not in 
+
+like   
+%  代表不确定个数的字符(通配符)
+_  代表一个不确定的字符。只匹配一个
+
+\  转义字符
+escape '符号'  将别的字符声明为转义符
+
+Regexp   判断一个值是否符合正则表达式的规则 select c from table where a regexp b   
+rlike    判断一个值是否符合正则表达式的规则 select c from table where a rlike b   
+
+
+
+not 或者 !
+and 或者 &&
+Or  或者  ||
+xor  异或
+
+And的优先级比or高
+
+
+
+位运算符
+&
+|
+^
+~
+>>
+<<
+
+
+
+
+别名不能在where中使用，可以在order by中使用。与sql的执行顺序有关
+
+
+
+
+
+多表查询
+笛卡尔积(交叉连接)
+
+SELECT last_name,department_name from employees ,departments (sql92的写法)
+SELECT last_name,department_name from employees cross join departments
+SELECT last_name,department_name from employees join departments 
+
+
+
+多表查询需要连接条件
+
+SELECT last_name,department_name from employees ,departments
+where employees.department_id= departments.department_id
+但是用where的话，只查出了符合条件的数据，可能有些员工没有部门，有些部门没有员工，这些数据就查不出来
+
+
+
+
+
+
+如果查询语句中出现了多个表中都存在的字段，则必须指明此字段的表名
+
+如果给表起了别名，一旦在select或者where中使用表名的话，则必须使用别名，不能使用原名
+
+
+
+
+内连接
+inner join。。。on。。。  inner可以省略
+join。。。on。。。
+
+外连接
+left outer join 。。。 on 。。
+right outer join 。。。 on。。。  
+outer可以省略
+
+
+满外连接
+
+
+
+
+Sql92  
+Sql99
+
+
+union all  效率比union高。因为不用去重
+
+
+
+Sql99新特性：
+
+Natural join 。自动使两张表所有相同的字段进行 = 连接
+
+using  
+
+
+
+
+
+
+内置函数
+
+
+数值函数：
+abs
+sign
+pi()
+ceil(),ceiling()
+floor()
+mod()
+least()
+greatest()
+rand()
+rand(x) x是种子，相同的x产生相同的随机数
+round(x)
+round(x,y)
+truncate(x,y) 
+Sqrt()
+三角函数
+角度弧度的转换函数
+指数与对数函数
+进制间的转换函数
+
+
+
+
+字符串函数：
+ascii()
+char_length(s)
+length(s)
+concat(s1,s2,s3...)
+concat(x,s1,s2....)
+
+...
+
+
+
+
+日期和时间函数
+curdate()
+current_date()
+curtime()
+now()
+sysdate()
+utc_date()
+utc_time()
+
+
+Unix_timestamp()
+unix_timestamp(date)
+from_unixtime(timestamp)
+
+
+Year()
+month()
+day()
+hour()
+minute()
+second()
+week()
+...
+
+
+extract()
+
+
+time_to_sec()
+sec_to_time()
+
+
+date_add()
+adddate()
+date_sub()
+subdate()
+subtime()
+datediff()
+timediff()
+......
+
+
+
+date_format()
+time_format()
+
+
+
+
+
+流程控制函数
+if()
+ifnull()
+Case when then ... end
+Case expr when  then ....end
+
+
+
+加密解密函数
+password()   8.0已经弃用
+md5()   不可逆
+sha()    不可逆
+encode()   8.0已经弃用
+decode()  8.0已经弃用
+
+
+
+
+
+关于Mysql信息的函数
+version()     mysql版本号
+connection_id()   
+database()  , schema()
+user() , current_user(), system_user(),session_user()
+charset()
+collation()
+
+
+
+
+
+其他函数
+format()
+conv()
+convert()
+......
+
+
+
+
+
+
+
+
+
+聚合函数
+sum()
+avg()
+max()
+min()
+count()  
+......
+
+sum(字段),avg(字段),count(字段)   只计算字段不为null的行
+
+
+
+count(1)
+count(*)
+count(具体字段)
+三种哪个效率更高
+
+
+
+group by 在from后面，where后面，order by ，limit 前面
+
+group by后面使用with rollup
+rollup 与 order by不能同时使用
+
+
+
+
+having 
+
+
+having与where对比
+
+Where可以直接使用表中的字段作为筛选条件，但是不能使用分组中的计算函数作为筛选条件
+Having必须与group by配合使用，可以把分组计算的函数和分组字段作为筛选条件
+
+如果过滤条件中没有聚合函数，这种情况下，where的执行效率要高于having
+
+Having一般用于对分组之后的数据进行筛选
+
+
+
+
+
+
+
+
+Sql底层执行原理
+
+
+select .....
+From ..... (Left/right) Join... on....
+Where .....
+Group by ....
+Having .....
+Order by.....
+limit.....
+
+
+执行过程：
+from ....,...(笛卡尔积查询结果)  -->> on (筛选) -->> (left/right join)
+--->>>  where  ---->>>group by ---->>> having ----->>>  select ---->>>
+--->>>  distinct---->>> order by ---->> limit
+
+根据这个顺序，所以一些别名可能在某一步不能使用，在后面可以使用
+
+
+
+
+
+
+
+子查询(除了group by和limit，其他位置都可以写子查询)
+
+where中
+having中
+case中
+。。。
+
+
+单行子查询(内查询返回一行)
+
+
+
+多行子查询(内查询返回多行)
+
+多行比较操作符
+in
+any
+all
+some  实际上是any的别名，一般常用any
+
+
+mysql中聚合函数不能嵌套使用
+
+
+#####注意空值问题
+
+
+
+
+相关子查询
+
+
+
+exists 与 not exists
+
+
+
+
+
+
+
+
+-------------------------------------------------------------------
+
+
+数据库与表创建、修改、删除
+
+
+
+
+数据库名，表名不得超过30个字符，变量名限制为29个
+必须只能包含A-Z，a-z，0-9，_ 共63个字符
+数据库名、表名、字段名等对象名中间不能包含空格
+必须保证你的字段和保留字、数据库系统或常用方法冲突，如果坚持使用，则用着重号引起来
+
+
+
+
+
+
+
+
+创建数据库
+create database 数据库名 
+create database  数据库名 character set 'utf8'
+create database  if not exists 数据库名
+
+
+
+
+管理数据库
+show databases
+show  create database 数据库名   查看数据库的信息
+
+
+切换数据库
+use  数据库名
+
+
+show tables 查看数据库有哪些表
+
+
+select database()   查看当前使用的数据库
+
+show tables from  数据库名    查看指定数据库下的表
+
+
+
+
+修改数据库(一般不修改)
+alter database  数据库名  character  set  'utf8'    改字符集
+数据库通常不能改名，一些可视化工具可以，是新建的库，把表复制到新库中，再删除旧库。
+
+
+删除数据库
+drop database 数据库名
+drop database if exists 数据库名（该方式在数据库不存在时也不会报错）
+
+
+
+
+
+创建表(需要用户有权限)
+create table [if not exists] 表名 ( id int , emp_name varchar(15), hire_date date )
+
+
+查看表结构
+desc 表名
+show create table 表名 
+如果创建表没有指定字符集，则默认使用数据库的字符集
+
+
+
+基于现有的表创建表
+create table 表名  as  select 字段 from  表名
+后面的select可以使用各种各样的结构以及别名
+
+
+创建一张表与另一张表相同，包括数据
+create table 表名  as  select * from  表名
+
+创建一张表与另一张表相同，不包括数据
+create table 表名  as  select * from  表名 where 1=2
+
+
+
+
+
+
+修改表 alter table
+
+添加字段
+alter  table 表名 add  字段  类型
+默认是添加在最后一个位置
+
+alter  table 表名 add  字段  类型  [first/after] 字段名
+添加到某一个位置
+
+
+
+修改字段(类型，长度，默认值。。。)
+alter table 表名  modify 字段  varchar(25)
+
+
+
+
+重命名字段
+alter table 表名 change 原字段名  新字段名  类型
+
+
+
+删除字段
+alter table 表名  drop column 字段名
+
+
+
+
+
+重命名表
+rename table 原名  to  新名
+
+
+删除表(表结构删了，数据也删了)
+drop table [if exists] 表名
+
+
+清空表(清空数据，表结构存在)
+truncate table  表名
+truncate不支持回滚。(少用)
+
+
+
+DCL中commit，rollback
+
+commit：提交数据，一旦执行commit，数据就被保存在了数据库中，意味着数据不可以回滚
+rollback：回滚数据。一旦执行，可以实现数据回滚。回滚到最近的一次commit之后
+
+
+truncate table 与 delete from  对比
+相同点：都可以实现对表中所有数据的删除，同时保留表结构
+不同点：truncate table一旦执行，表数据全部清除，数据不可回滚
+        delete from    可全删也可部分删除。同时可以实现回滚。
+
+DDL和DML的说明
+DDL的操作一旦执行，不可回滚
+DML的操作默认情况，一旦执行，也是不可回滚的，
+但是，如果执行DML之前，执行了set autocommit=false，则执行的DML操作可以回滚。但是对DDL无效
+
+
+
+
+
+
+
+mysql8.0新特性 DDL的原子化
+drop table test1，test2。 当test2不存在时，test1也删不掉。
+
+
+
+-------------------------------------------------------------------------------
+
+DML增删改操作
+
+
+
+增加：
+
+insert into table(...) values(...),(),...
+
+
+insert into table(id,name) select id,name from table2
+
+
+更新：修改数据时，可能存在不成功的情况。(由于约束造成的)
+
+update table set .. = ..  where ....
+
+
+删除: 删除数据时，也可能因为约束的影响，导致删除失败
+
+delete from table where ...
+
+
+
+
+
+mysql8新特性： 计算列
+CREATE TABLE tb1(
+id INT,
+a INT,
+b INT,
+c INT GENERATED ALWAYS AS (a + b) VIRTUAL
+);
+
+INSERT INTO tb1(a,b) VALUES (100,200);
+
+
+
+
+
+
+
+
+
+-------------------------------------------------------------------------------
+
+数据类型
+
+整型：
+				字节 	   适用场景
+tinyint			1			
+smallint		2
+mediumint		3
+int				4
+bigint			8
+
+在评估使用哪种数据类型的时候，需要考虑存储空间和可靠性的平衡问题。
+一方面，用占用字节数小的整数类型可以节省存储空间。
+另一方面，为了节省空间，使用较小的数据类型时，一旦超出取值范围，可能引起系统错误，影响可靠性
+
+
+
+
+
+
+create table table1(
+f int(5) zerofill
+)
+zerofill表示宽度不足5时，用0填充
+
+mysql8中已不使用指定宽度。
+
+
+
+
+
+
+浮点型
+			字节
+float		4
+double		8
+
+
+数据精度说明
+
+
+create table test_table(
+f1 double 
+);
+
+insert into test_table VALUES(0.47),(0.44),(0.19)
+
+select sum(f1) from test_table
+不等于1.1
+select sum(f1)=1.1 from test_table
+false
+
+float误差更大
+为什么呢？
+因为浮点数存储方式有问题。
+9.625用二进制表达是1001.101，但是如果尾数不是5或0(比如9.624)就无法用一个二进制精确表达。进而会产生误差
+
+不要用=判断浮点数是否相等
+
+
+精准的表示浮点数
+decimal
+
+decimal(M，D)
+
+在mysql中是以字符串形式存储的
+
+
+
+
+
+
+位类型
+bit
+bit(M)
+如果没指定M,默认是1位。这个1位表示只能存1位的二进制。
+M表示二进制的位数，最小是1，最大是64
+
+
+
+
+时间和日期类型
+			字节		日期格式				最小值		最大值
+year		1			YYYY或者YY				1901		2155
+time		3			HH:MM:SS				-838:59:59	838:59:59
+date		3			YYYY-MM-DD				1000-01-01	9999-12-03
+datetime	8			YYYY-MM-DD HH:MM:SS
+timestamp	4			YYYY-MM-DD HH:MM:SS
+
+
+
+
+date类型
+以YYYY-MM-DD格式或者YYYYMMDD格式表示的字符串日期。后者格式会转化为前者
+标准格式YYYY-MM-DD
+
+time类型
+标准格式HH:MM:SS
+
+D HH:MM:SS	D表示天
+
+
+
+datetime
+
+
+timestamp
+
+timestamp涉及时区问题，不同时区显示时间不同
+timestamp底层是存储的毫秒数，距1970-01-01 00：00：00的毫秒
+
+
+
+
+
+
+
+字符串
+
+char       固定长度，长度M，范围 0<=M<=255，占用M个字节。   如果实际长度小于M,则会填充空格达到指定长度。查询时，会自动去掉空格
+varchar    可变长度，长度M,  占用(实际长度+1)字节，额外字节存储信息长度。定义时，必须定义长度。该长度是最大长度。
+tinytext
+text
+mediumtext
+longtext
+enum
+set
+
+
+
+
+二进制字符串类型
+
+binary
+varbinary
+tinyblob
+blob
+mediumblob
+longblob
+
+
+
+json类型
+
+
+
+-------------------------------
+约束
+
+not null
+unique
+primary key
+foreign key
+check
+default
+
+列级约束
+表级约束
+
+
+
+查看该表的约束
+select * from information_schema.table_constraints where table_name=""
+
+
+constraint  表级约束  在创建约束时，给约束起名。不起名，默认是列名
+
+
+
+not null
+只能给单列添加
+
+
+
+unique
+可以给多列添加
+
+mysql> create table t_user(
+-> id int(10),
+-> name varchar(32) not null,
+-> email varchar(128),
+-> constraint t_user_email_unique unique(email)
+-> );
+
+
+添加唯一约束的列会自动创建唯一索引，
+删除唯一约束只能通过删除唯一索引的方式删除
+删除时需要指定唯一索引名，唯一索引名就和唯一约束名一样
+如果创建唯一约束时未指定名称，如果是单列，就默认是列名，如果是组合列，那么默认和()中排在第一个的列名相同。
+
+
+
+
+
+
+
+primary key
+主键约束相当于唯一约束加非空约束的组合，主键约束列不能重复， 也不能为空值
+一个表只能有一个主键约束
+如果是多列组和的主键约束，那么这些列都不能为空值，并且组合列不能重复
+主键名总是primary，就算自己命名了主键约束名也没用
+当创建主键约束时，系统默认会在所在的列或列组合上建立对应的主键索引，(能用主键查询的，就用主键查，效率更高)，如果删除主键约束了，主键索引也就自动删除了
+
+
+
+
+
+
+
+
+auto_increment
+自增
+
+一个表只能有一个自增列
+当需要产生唯一标识符或顺序值时，可设置自增长
+自增长约束的列必须是键列(主键，唯一约束的列)
+自增约束的列的类型必须是整数类型
+如果自增列指定了0和null，会在当前最大值的基础上自增，如果自增列手动指定了具体值，直接赋值为具体值
+
+在mysql5.7中和mysql8.0中按下列步骤执行，结果不同。因为mysql5.7在内存中读取，mysql8.0持久化到磁盘上了
+create table t1(id int auto_increment primary key);
+insert into t1 values(null),(null),(null);
+select * from t1;
+delete from t1 where id=3;
+insert into t1 values(null);
+select * from t1;
+delete from t1 where id=4;
+重启数据库，重新插入一个null值。
+insert into t1 values(null);
+select * from t1;
+
+
+
+
+
+foreign key约束
+主表与从表
+
+特点
+1、从表的外键列，必须引用/参考主表的主键或唯一约束的列
+2、在创建外键时，如果不给外键约束命名，默认名称不是列名，而是自动产生一个外键名
+3、创建表是就指定外键约束的话，先创建主表，在创建从表
+4、删表时，先删从表(或者先删除外键约束)，在删除主表
+5、当主表的记录被从表参照时，主表的记录将不允许删除，如果要删除数据，需要先删除从表中依赖该记录的数据，然后再删除主表的数据
+6、在从表中指定外键约束，并且一个表可以有多个外键约束
+7、从表的外键列与主表的被参照列的名字可以不相同，但是数据类型必须一样，逻辑意义一样，如果类型不一样，创建子表时，就会报错
+8、当创建外键约束时，系统会默认在对应的列上建立普通的索引。但是索引名是列明，不是外键约束的名
+9、删除外键约束后，必须手动删除对应的索引
+
+
+
+
+约束等级
+cascade     在父表上update/delete记录时，同步update/delete掉子表的匹配记录
+set null    在父表上update/delete记录时, 将子表上匹配记录的列设为null，但是要注意子表的外键列不能为not null
+no action    如果子表中有匹配记录，则不允许对父表对应候选键进行update/delete操作
+restrict    同no  action
+set default     父表有变更时，子表将外键列设置成一个默认的值，但innodb不能识别
+如果没指定等级，就相当于restrict
+对于外键约束，推荐是update时cascade，delete时restrice
+
+
+
+
+在开发中推荐不使用外键约束，在程序中进行判断
+
+
+
+
+
+
+check
+检查某个字段的值是否符合要求，通常是值的范围
+mysql5.7不支持(实际实施的时候不起作用)
+mysql8.0支持
+
+
+
+
+
+defaule约束
+
+
+
+
+
+--------------------------------------------------------------------------
+视图
+
+视图是一个或者多个表里的数据的逻辑显示，并不存储数据，是一张虚拟表
+
+视图建立在已有的表的基础上
+
+视图的创建和删除只影响视图本身，不影响对应的基表。但是当对视图中的数据进行增加，删除和修改操作时，数据表中的数据会相应发生变化
+
+向视图提供数据的语句为select语句，可将视图理解为存储起来的select语句
+
+
+
+创建视图
+
+完整语法
+
+CREATE  [ALGORITHM={  UNDEFINED |  MERGE  |  TEMPTABLE }]
+                   VIEW   视图名称  [(  字段列表 )]
+                   AS 查询语句
+                   [ WITH   [ CASCADED |  LOCAL  ]  CHECK OPTION];
+
+
+精简版
+CREATE VIEW <视图名>  AS <SELECT语句>
+
+
+
+
+还可基于视图创建视图
+
+
+
+
+查看视图
+show tables   查看表和视图
+
+desc  视图名
+
+查看视图属性
+show table status like  “视图名”
+
+show create view 视图名
+
+
+
+
+更新(增删改)视图数据
+更新视图或者表会使表或者视图同步更新
+
+一般情况下可以对视图进行更新
+但是一些场景下不能对视图进行更新
+1、在定义视图时指定了ALGORITHM=TEMPTABLE，视图将不支持insert和delete操作
+2、视图中不包含基表中所有被定义为非空又未指定默认的值的列，视图将不支持insert操作
+3、在定义视图的select中使用了join联合查询，视图将不支持insert和delete操作
+4、在定义视图的select语句的字段列表中使用了数学表达式或者子查询，视图将不支持insert，也不支持update使用了数学表达式，子查询的字段值
+5、在定义视图的select中使用了distinct，聚合函数，group by ， having， union等，视图将不支持insert，update，delete
+6、在定义视图的select语句中包含了子查询，而子查询引用了from后面的表，视图将不支持insert，update，delete
+7、视图定于基于一个不可更新视图
+8、常量视图
+
+
+只有当视图中的数据与表中的数据一对一时才可进行修改
+视图一般是用来查询的，一般不涉及修改操作，要操作一般对原表进行操作
+
+
+
+
+
+
+修改视图
+
+删除视图
+
+
+
+
+--------------------------------------------------------------------
+
+存储过程与存储函数
+
+
+
+存储过程
+create procedure  存储过程名(IN | OUT| INOUT 参数名 参数类型,...)
+[characteristics ...]
+BEGIN
+	存储过程体
+
+END
+
+
+DELIMITER   告诉mysql解释器，该段命令是否已经结束了
+默认情况下，delimiter是分号
+
+
+调用
+call 存储过程名(参数)
+
+返回值理解为有0个或者多个
+
+
+
+存储函数
+
+create function 函数名(参数名  参数类型)
+RETURNS 返回值类型
+[characteristics ...]
+BEGIN
+	函数体，肯定有returns语句
+
+END
+
+返回值只能是一个。
+
+调用
+select 函数名(参数)
+
+
+
+存储过程一般用于更新，存储函数用于查询结果为一个值并返回时
+存储函数可以在查询语句中使用，存储过程不行，
+
+
+
+
+
+存储过程与存储函数的查看，修改和删除
+
+
+查看
+
+1、show create {function | procedure} 存储过程名或函数名
+
+
+
+2、show  {function | procedure}  status [like 'pattern']
+
+
+
+
+3、从information_schema.Routines表中查看存储过程与函数的信息
+
+
+
+修改
+
+
+删除
+
+
+-------------------------------------------------------------------------
+
+变量
+
+mysql中，变量分为系统变量和用户自定义变量
+
+
+
+系统变量
+由系统定义，属于服务器层面，启动mysql服务，生成mysql服务实例期间，mysql将为mysql服务器内存中的系统变量赋值，这些系统变量定义了当前mysql服务实例的
+属性，特征。这些系统变量的值要么是编译mysql时参数的默认值，要么是配置文件(my.ini等)中的参数值。可以通过文档查看mysql的系统变量
+
+
+系统变量还分为全局系统变量(需要添加global关键字)以及会话系统变量(需要添加session关键字)，有时也把全局系统变量简称为全局变量，把会话系统变量称为local变量。
+如果不写，默认会话级别.静态变量属于特殊的全局系统变量
+
+
+每一个mysql客户机成功连接mysql服务器后,都会与之产生对应的会话.会话期间,mysql服务实例会在mysql服务器内存中生成与该会话对应的会话系统变量,这些会话系统
+变量的初始值是全局系统变量的复制
+
+
+全局系统变量对所有绘画有效,但是不能重启mysql.修改过的会失效
+
+
+
+
+查看系统变量
+
+查看所有全局系统变量
+show global variables
+
+查看所有会话变量
+show session variables
+或者
+show variables
+
+查看部分
+show variables like '...'
+
+
+查看某一个系统变量
+mysql中用两个@开头,
+@@global
+@@session
+
+select @@global.变量名
+select @@session.变量名
+
+select @@变量名
+如果没指定global或者session,先在session中找,再在global中找
+
+
+
+修改系统变量
+
+1.在配置文件里修改,需重启mysql.一劳永逸
+2.在运行时,使用set命令修改.
+set global 变量名=值
+set @@global.变量名=值
+换成session就是会话的
+
+
+
+
+
+
+
+
+
+用户变量
+用户变量以一个@开头,根据作用范围不同,分为会话用户变量和局部变量
+
+会话用户变量与会话系统变量一样,只对当前连接会话有用.用@开头
+局部变量,只在begin和end语句块中有效.局部变量只能在存储过程和函数中使用.
+
+
+
+
+
+会话变量
+变量的声明和赋值
+1. set @用户变量 =值
+   set @用户变量 :=值
+
+
+2. select @用户变量:=表达式 [from等子句]
+   select 表达式 into @用户变量   [from等子句]
+
+使用变量
+select @变量名
+
+
+   
+
+
+
+
+局部变量
+使用declare语句定义一个局部变量
+仅仅在begin和end中有效(使用在存储过程,函数中)
+只能放在begin..end中,而且只能放在第一句
+
+BEGIN
+	#声明局部变量
+	declare  变量名  变量数据类型 [default 变量默认值]   # 若没指定默认值,则初始值为null
+	declare  变量名1,变量名2......变量数据类型  [default 变量默认值]
+
+	#为局部变量赋值
+	set 变量名=值
+	select 字段名或表达式 into 变量名  [from 子句]
+	
+	# 查看局部变量的值
+	select 变量1,变量2
+
+END
+
+
+
+
+
+
+
+
+
+
+
+
+-----------------------------------------------------------
+定义条件与处理程序
+
+定义条件是指事先定义程序执行过程中遇到的问题，处理程序定义了在遇到这些问题时应当采取的处理方式和解决办法，
+保证存储过程和函数在遇到警告或错误时能继续执行，从而增强程序处理问题的能力，避免程序出现异常被停止执行。
+
+
+
+错误码
+mysql_error_code是数值型错误代码
+sqlstate_value是长度为5的字符串类型错误代码
+
+
+定义条件就是给mysql的错误码命名.他将一个错误名字和指定的错误条件关联起来,这个名字随后可被用在定义处理程序的declare handler语句中
+
+declare 错误名称 condition for 错误码(或错误条件)
+
+
+例子：
+declare command_not_allowed condition for  1148
+declare command_not_allowed condition for  sqlstate '42000'
+
+
+
+定义处理程序
+
+declare 处理方式  handler for 错误类型 处理语句
+
+处理方式：
+continue
+exit
+undo
+
+错误类型：
+sqlstate "字符串错误码"
+mysql_error_code
+错误名称  （这里的错误名称，declare 错误名称 condition for 错误码(或错误条件)）
+sqlwarning
+not found
+sqlexception
+
+处理语句：
+
+
+
+
+--------------------------------------------------------------------------------
+
+流程顺序
+
+条件判断
+if，case
+
+if 表达式 then 操作1  [elseif 表达式2 then 操作2]......[else 操作n] end if
+
+
+
+循环语句
+loop，while，repeat
+
+
+
+跳转语句
+iterate，leave
+leave理解为break
+iterate理解为continue
+
+
+--------------------------------------------------------------
+
+
+游标(光标)
+
+
+
+
+
+-------------------------------------------------------
+
+
+触发器
+
+
+创建
+create trigger 名字 
+{before | after} {insert | update | delete} on 表名
+for each  row
+触发器执行的语句块
+
+
+
+
+查看触发器
+1、show triggers
+2、show create trigger 触发器名
+3、select * from information_schema.TRIGGERS
+
+
+删除触发器
+
+
+
+
+
+
+---------------------------------------------------------------------
+
+
+字符集
+
+show variables like "%character%" 
+
+character_set_database  创建数据库时的字符集
+character_set_server
+
+
+修改字符集
+配置文件
+配置 ：character_set_server="utf8"。修改该参数时直接决定了character_set_database的字符集
+
+
+各级别的字符集
+
+服务器级别(character_set_server)
+数据库级别
+表级别
+列级别
+
+
+character_set_client     | utf8                       | 服务器解码请求时使用的字符集
+character_set_connection | utf8                       |
+character_set_database   | latin1                     | 数据库级别
+character_set_filesystem | binary                     |
+character_set_results    | utf8                       |
+character_set_server     | latin1                     | 服务器级别
+character_set_system     | utf8                       |
+
+
+utf8 表示一个字符需要1-4个字节。
+utf8mb3  阉割过的utf8，使用1-3个字节表示字符
+utf8mb4  正宗的utf8，1-4个字节表示字符
+
+mysql中utf8是utf8mb3的别名
+
+查看mysql支持的字符集
+show charset
+show character set
+
+
+
+比较规则
+collation 表示比较规则
+utf8_general_ci是一种通用的比较规则
+utf8_polish_ci表示波兰语的规则比较
+后缀_ci表示不区分大小写
+
+查看比较规则
+show collation
+
+
+
+
+请求到响应过程中字符集的变化
+
+从客户端到服务器的请求本质上是一个字符串，服务器向客户端返回的结果也是一个字符串，而字符串其实是使用某种
+字符集编码的二进制数据，这个字符串可不是使用一种字符集的编码方式一条道走到黑的，从发送请求到返回结果这个
+过程伴随着多次字符集的转换，在这个过程中用到三个系统变量
+
+character_set_client         服务器解码请求时使用的字符集
+character_set_connection     服务器处理请求时，会把请求字符串从character_set_client转为character_set_connection
+character_set_results        服务器向客户端返回数据时使用的字符集
+
+
+
+
+show variables like "%lower_case_table_names%"  0表示大小写敏感，1表示不敏感
+
+mysql在windows下不区分大小写
+在linux下有些区分大小写，有些不区分
+
+
+当想设置大小写不敏感时，要在my.cnf这个配置文件中[mysqld] 加入lower_case_table_names=1.然后重启mysql(适用于5.7，8的话还有些别的操作)
+
+
+
+sql_mode
+严格模式
+宽松模式
+可以在配置文件中设置
+
+
+
+
+
+
+
+-----------------------------------------
+
+mysql的目录结构
+
+mysql文件的存放路径 /var/lib/mysql
+通过 show variables like  "%datadir%" 命令也可查看目录
+
+
+相关命令的目录
+/usr/bin，/usr/sbin
+
+配置文件的目录
+/etc/mysql(my.cnf)
+/usr/share/mysql
+
+
+
+
+mysql自带数据库
+
+mysql
+存储了mysql的用户账户和权限信息，一些存储过程，事件的定义信息，一些运行过程中产生的日志信息，一些帮助信息以及一些时区信息
+
+information_schema
+保存着mysql服务器的维护的所有其他数据库的信息，比如有哪些表，哪些视图，哪些触发器，哪些列，哪些索引
+
+performance_schema
+保存mysql服务器运行过程中的一些状态信息，可以用来监控mysql服务的各类性能指标。包括统计最近执行了哪些语句，在执行的每个阶段都花费了多长时间，内存的使用情况等信息。
+
+sys
+这个数据库主要是通过视图的形式把information_schema和performance_schema结合起来，帮助管理员监控mysql的性能
+
+
+
+数据库文件
+
+InnoDB引擎
+.frm
+.ibd
+.opt
+ibdata1
+
+MyISAM
+.frm
+.sdi
+.MYD
+.MYI
+
+
+
+-----------------------------------------------------------------
+
+用户与权限管理
+
+创建用户
+create user 用户名 identified by 密码
+在mysql库的user表中可查看所有的用户
+
+
+
+删除用户
+drop
+
+delete(删除不干净)
+
+
+
+
+修改用户密码
+
+修改当前用户
+alter user user() identified by "mima"
+
+set password="mima"
+
+
+修改其他用户
+
+alter user 'zhangsan'@'loalhost' identified by "mima"
+
+set password for 'zhangsan'@'%' = "mima"
+
+
+
+设置密码过期，密码重用策略
+
+
+
+
+权限管理
+
+查看mysql有哪些权限  show privileges;
+
+
+查看当前用户的权限  show grants
+
+
+授予权限
+回收权限
+
+
+权限表
+
+mysql通过权限表控制用户对数据库的访问，权限表存放在mysql库中，重要的是user，db，table_priv，column_priv,proc_priv表等。
+数据库启动时，服务器将这些表中的信息读入内存.
+
+
+角色
+
+
+
+
+
+
+
+配置文件的使用
+
+
+
+
+
+
+-----------------------------------------------------
+
+mysql的逻辑架构
+
+查询缓存(8.0没有缓存模块了)
+
+解析器
+
+优化器
+
+引擎
+
+
+
+
+-----------
+
+开启缓存，配置文件中添加query_cache_type=1
+
+
+select @@profiling
+profiling 功能默认为0 
+set profiling=1
+会记录当前sql的执行信息
+
+
+
+show profiles。  查看执行过的sql
+
+show profile     查看最后一条sql的执行信息
+show profile for query query_id;
+
+
+
+
+
+
+数据库缓冲池(内存)
+
+
+查看/设置缓冲池大小
+
+show variables like "%innodb_buffer_pool_size%"
+set innodb_buffer_pool_size=
+
+
+多个buffer_pool实例
+在配置文件中设置
+[server]
+innodb_buffer_pool_instances=2  设置2个实例
+
+当缓冲池大小小于1G时，设置多个也没用，还是一个
+
+
+
+
+----------------------------------------------------------------------- -
+
+存储引擎(专门处理表的)
+
+show engines;   查看支持的存储引擎
+
+show variables like "%storage_engine%"  查看默认的存储引擎
+
+修改默认的存储引擎
+default-storage-engine =MyISAM(在配置文件中改)
+
+不同的存储引擎，决定了表的存储格式。(.frm,.MYD等文件)
+
+
+InnoDB引擎
+具备外键支持功能的事务存储引擎
+
+支持事务
+
+文件结构
+.frm  存储表结构
+.ibd  存储数据和索引
+
+行锁，操作时只锁某一行。适合高并发
+
+
+
+memery引擎
+csv引擎
+......
+
+
+
+
+
+-----------------------------------------------
+
+索引
+
+索引是帮助mysql高效获取数据的数据结构
+减少磁盘I/O
+
+索引是在存储引擎中实现的
+Innodb是b+树
+
+
+存储引擎可以定义每个表的最大索引数和最大索引长度
+
+所有存储引擎支持每个表至少16个索引，总索引长度至少为256字节
+
+
+索引的缺点
+1、创建和维护索引要耗费时间。
+2、需要占用磁盘空间，如果有大量的索引，索引文件可能比数据文件更快达到最大文件尺寸
+3、虽然提高了查找的速度，但是却降低了更新表的速度。因为当表进行增加，删除，修改的时候，索引也要动态的维护，降低了数据的更新速度
+
+
+
+表数据按页存储，一个数据页最大16k
+数据页
+
+每一条记录之间是用单链表进行连接的
+
+
+目录项
+目录页
+
+
+
+
+
+常见索引
+
+聚簇索引(主键索引)
+
+聚簇索引默认就是有的，不用单独再去创建索引
+聚簇索引并不是一种单独的索引类型，而是一种数据存储方式。
+索引和数据存储在一起
+
+没有主键的话，mysql会自动选择
+
+
+
+
+非聚簇索引(二级索引，辅助索引)
+
+数据与索引未存储在一起
+
+回表操作
+
+
+使用非主键字段建立索引，构成二级索引，当查询到数据时，执行回表操作，根据聚簇索引去查其他字段的值
+
+
+
+聚簇索引中叶子节点存储的就是完整的一行数据了，而非聚簇索引叶子节点不是，而是只存储了构建该索引的字段和主键。
+
+只有一个聚簇索引，可以多个非聚簇索引
+
+使用聚簇索引时，查询效率高(不用回表)，但是插入，删除，更新时，效率比非聚簇索引低
+
+
+
+
+联合索引
+非聚簇索引中的一种
+
+
+
+
+
+
+
+MyISAM索引
+
+MyISAM没有聚簇索引，都属于非聚簇索引
+
+
+
+
+
+
+
+R树
+
+
+
+
+
+
+
+
+
+
+
+-----------------------------------------------------------------------------
+
+范式
+
+第一范式
+第二范式
+第三范式
+巴斯范式
+第四范式
+第五范式
+
+减少数据冗余
+
+
+
+反范式化
+
+业务为主优先原则
+
+
+
+
+
+
+
+ER模型
+
+
+
+数据表的设计原则：
+1、数据表的个数越少越好
+2、表中字段的个数越少越好
+3、表中联合主键的字段个数越少越好
+
+---(最终：以业务需求为主)
+
+
+建表时主键：强制要求为id，类型为int或bigint。且为自增。建议使用无符号
+
+
+
+
+
+
+------------------------------------------------------------
+
+数据库优化
+
+服务器层面的优化
+
+
+
+
+
+
+
+
+数据库结构的优化
+
+
+拆分表：冷热数据分离
+
+
+大表优化：单表记录数过大时，数据库的CRUD性能会明显下降。可对其进行优化
+1、带where条件的查询
+2、读写分离、
+3、
+
+
+
+
+-------------------------------------------------------------
+数据库事务
+
+什么是事务：一组逻辑操作单元，使数据从一种状态变换到另一种状态。
+
+事务处理的原则：保证所有事务都作为`一个工作单元`来执行，即使出现了故障，都不能改变这种执行方式。当在一个事务中执行多个操作时，
+要么所有的事务都被提交(`commit`)，那么这些修改就`永久`地保存下来；要么数据库管理系统将`放弃`所作的所有`修改`，整个事务回滚(`rollback`)到最初状态。
+
+
+事务的ACID特性
+
+- 原子性（atomicity）：**
+
+原子性是指事务是一个不可分割的工作单位，要么全部提交，要么全部失败回滚。
+
+- **一致性（consistency）：**
+
+一致性是指事务执行前后，数据从一个`合法性状态`变换到另外一个`合法性状态`。这种状态是`语义上`的而不是语法上的，跟具体的业务有关。
+
+- **隔离型（isolation）：**
+
+事务的隔离性是指一个事务的执行`不能被其他事务干扰`，即一个事务内部的操作及使用的数据对`并发`的其他事务是隔离的，并发执行的各个事务之间不能互相干扰。
+
+- **持久性（durability）：**
+
+持久性是指一个事务一旦被提交，它对数据库中数据的改变就是`永久性的`，接下来的其他操作和数据库故障不应该对其有任何影响。
+
+持久性是通过事务日志来保证的，包括重做日志(redo)和回滚日志(undo)。当我们通过事务对数据进行修改的时候，
+首先会将数据库的变化信息记录到重做日志中，然后再对数据库中对应的行进行修改。这样做的好处是，即使数据库崩溃，数据库重启后也能找到没有更新到数据库中的重做日志
+重新执行，从而使事务具有持久性。
+
+
+
+
+事务的状态
+
+1、活动的   事务对应的数据库操作正在执行的过程中，我们就说该事务处于活动的状态
+2、部分提交的    当事务最后一个操作执行完成，但是由于操作都在内存中执行，所造成的影响并没有刷新到磁盘时，我们就说该事务处于部分提交的状态
+3、失败的       当事务处于活动的或者部分提交的状态时，可能遇到了某种错误（数据库自身的错误、操作系统错误或者直接断电等）而无法继续执行，或者人为的停止
+当前事务的执行。我们就说该事务处于失败的状态
+4、中止的       如果事务执行了一部分而变为失败的状态，那么需要把已经修改的事务中的操作还原到事务执行前的状态。换句话说，
+就是要撤销这个失败事务对当前数据库造成的影响。我们把这个撤销的过程称为回滚。当回滚操作执行完毕时，也就是数据库恢复到了执行事务之前的状态，
+我们就说该事务处于中止的状态
+5、提交的       当一个处于部分提交的状态的事务将修改过的数据都同步到磁盘上之后，我们就说该事务处于提交的状态
+
+
+
+
+使用事务
+
+事务的完成过程：
+1、开启事务
+2、一系列DML操作。
+......
+3、事务结束的状态(commit或者rollback)
+
+
+显式事务
+使用start transaction 或者 begin
+start transaction 后面可以跟：read only , read write(默认), with consistent snapshot 几个修饰符
+
+1、read only  标识当前事务是一个只读事务，也就是属于该事务的数据库操作只能读取数据，而不能修改数据。
+补充：只读事务中只是不允许修改那些其他事务也能访问到的表中的数据。对于临时表(create temporary table创建的表)来说，
+只在当前会话中可见，所以只读事务可以对临时表进行增，删，改操作的。 (临时表出现的情况比较少)
+
+2、read write   标识当前事务是一个读写事务，既可以读取数据，也可以修改数据
+3、with consistent snapshot   启动一致性读
+
+read only 和 read write 是用来设置所谓的事务访问模式的，就是以只读还是读写来访问数据库中的数据。不能同时是只读和读写。所以不能同时出现在start transaction后面
+如果不显式指定事务的访问模式，那是默认是读写。 
+
+
+
+savepoint关键字
+
+创建保存点： savepoint  保存点名称
+删除某个保存点： release savepoint  保存点名称
+
+
+回滚到某个保存点： rollback to [savepoint名称]
+
+
+
+
+
+
+
+隐式事务
+
+
+关键字autocommit
+
+show variables like "autocommit"   默认是on ，此时每一条dml操作都是一个独立的事务。会自动提交
+
+
+
+如何关闭自动提交
+1、set autocommit =false         （对dml操作有效，对ddl无效）
+
+
+此时需要执行commit进行提交，或者rollback进行回滚
+
+2、在autocommit=true的情况下，如果用了begin或者start transaction开启事务，则dml操作不会自动提交
+
+
+
+
+completion_type变量
+
+
+set @@completion_type=1
+
+
+
+
+事务的分类
+
+扁平事务
+带有保存点的扁平事务
+链事务
+嵌套事务
+分布式事务
+
+
+
+
+事务的隔离级别
+多个事务同时操作同一数据时用到的
+
+数据并发时的问题
+1、脏写
+2、脏读
+3、不可重复读
+4、幻读
+
+
+1.** **脏写（**`Dirty Write`**）*
+
+对于两个事务 Session A、Session B，如果事务Session A`修改了`另一个`未提交`事务Session B`修改过`的数据，那就意味着发生了`脏写`
+
+**2.** **脏读（**`Dirty Read`**）**
+
+对于两个事务 Session A、Session B，Session A`读取`了已经被 Session B`更新`但还`没有被提交`的字段。
+之后若 Session B`回滚`，Session A`读取`的内容就是`临时且无效`的。
+
+
+**3.** **不可重复读（**`Non-Repeatable Read`**）**
+
+对于两个事务Session A、Session B，Session A`读取`了一个字段，然后 Session B`更新`了该字段。 (进行了commit)
+之后Session A`再次读取`(还是在之前的事务中)同一个字段，`值就不同`了。那就意味着发生了不可重复读。
+
+
+**4.** **幻读（**`Phantom`**）**
+
+对于两个事务Session A、Session B, Session A 从一个表中`读取`了一个字段, 然后 Session B 在该表中`插入`了一些新的行。(进行了commit) 
+之后, 如果 Session A`再次读取`(还是在之前的事务中，事务还没结束)同一个表, 就会多出几行。那就意味着发生了幻读。
+
+
+------------------------------------------------------------
+
+
+sql中的四种隔离级别(都解决了脏写的问题)
+
+- READ UNCOMMITTED`：
+读未提交，在该隔离级别，所有事务都可以看到其他未提交事务的执行结果。不能避免脏读、不可重复读、幻读。
+
+- `READ COMMITTED`：
+读已提交，它满足了隔离的简单定义：一个事务只能看见已经提交事务所做的改变。这是大多数数据库系统的默认隔离级别（但不是MySQL默认的）。
+可以避免脏读，但不可重复读、幻读问题仍然存在。
+
+- `REPEATABLE READ`：（MySQL的默认隔离级别）
+可重复读，事务A在读到一条数据之后，此时事务B对该数据进行了修改并提交，那么事务A再读该数据，读到的还是原来的内容。
+可以避免脏读、不可重复读，但幻读问题仍然存在。`这是MySQL的默认隔离级别`。
+
+- `SERIALIZABLE`：
+可串行化，确保事务可以从一个表中读取相同的行。在这个事务持续期间，禁止其他事务对该表执行插入、更新和删除操作。
+所有的并发问题都可以避免，但性能十分低下。能避免脏读、不可重复读和幻读。
+
+
+
+
+
+
+
+不同数据库厂商对于sql标准中的四种隔离级别支持不一样。Oracle只支持`READ COMMITTED`和SERIALIZABLE。mysql虽然四种都支持，但与sql标准规定的有些出入。
+mysql在REPEATABLE READ隔离级别下，是可以进账幻读发生的。
+
+
+
+查看隔离级别
+show variables like "transaction_isolation"  (5.7.20及之后版本)
+select @@transaction_isolation;  (任意版本均可)
+
+设置隔离级别
+1、set [global | session] transaction isolation level 隔离级别
+2、set [global | session]  transaction_isolation="隔离级别"
+
+
+
+
+
+
+
+-----------------------------------------------------------------------
+
+
+事务日志
+redo log  重做日志
+undo log  回滚日志
+
+这两个日志都是存储引擎层生成的日志。
+
+
+redo日志文件在物理磁盘上是：
+ib_logfile0
+ib_logfile1
+....
+
+
+
+
+
+
+
+--------------------------------------------------------------
+锁
+
+事务的隔离性由锁机制实现
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

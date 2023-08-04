@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+{% block title %}
+    关于我
+{% endblock %}
+
+
+{% block styles %}
+    {{ super() }}
+    <style>
+        #container {
+            width: 1200px;
+            margin: 0 auto;
+        }
+
+        #container p {
+            width: 80%;
+            background-color: #83cae3;
+        }
+    </style>
+{% endblock %}
+
+{% block newcontent %}
+    <div id="container">
+
+        <p>
+            {% if not user.aboutme %}
+                去用户中心设置更多关于我的信息
+            {% else %}
+                {{ user.aboutme[0].content | cdecode1 | safe }}
+                {#            []访问 也可以改为用点(.)，first等方式访问            #}
+            {% endif %}
+        </p>
+
+    </div>
+{% endblock %}
+
+
+
+
+
+
+
+
+
+
+
+
+
+

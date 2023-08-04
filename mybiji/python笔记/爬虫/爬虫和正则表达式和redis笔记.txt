@@ -1,0 +1,1267 @@
+requests库
+requests库的七个主要方法
+requests.request()  构造一个请求，支撑以下各方法的基础方法
+requests.get()    获取HTML网页的主要方法，对应于HTTP的GET
+requests.head()   获取HTML网页的头信息的方法，对应于HTTP的HEAD
+requests.post()  向HTML网页提交POST请求的方法，对应于HTTP的POST
+requests.put()    向HTML网页提交PUT请求的方法，对应于HTTP的PUT
+requests.patch()    向HTML网页提交局部修改请求，对应于HTTP的PATCH
+requests.delete()     向HTML页面提交删除请求，对应于HTTP的DELETE
+
+
+requests.request() 是其他方法的基础方法
+
+requests.request(method，url，**kwargs)
+method：请求方式，对应get/put/post等七种
+url：获取页面得url连接
+**kwargs ：控制访问参数，共13个
+
+method：请求方式
+r=requests.request('GET',url,**kwargs)
+r=requests.request('POST',url,**kwargs)
+r=requests.request('PUT',url,**kwargs)
+r=requests.request('PATCH',url,**kwargs)
+r=requests.request('HEAD',url,**kwargs)
+r=requests.request('delete',url,**kwargs)
+r=requests.request('OPTIONS',url,**kwargs) (OPTION是获取一些参数)
+
+**kwargs：控制访问参数，均为可选项
+
+1. params：字典或字节序列，作为参数增加到url中
+例子：
+kv={'key1':'value1',"key2":"value2"}
+r=requests.request('GET','http://python123.io/ws',params=kv)  ##**kwargs中参数为可选，为其赋值时要params=kv这样，指明是哪个参数
+print(r.url)
+结果为：http://python123.io/ws?key1=value1&key2=value2
+
+2.data：字典，字节序列或文件对象，作为Request的内容，向服务器提交
+例：
+kv={'key1':'value1',"key2":"value2"}
+r=requests.request('POST','http://python123.io/ws',data=kv)
+body="主体内容"
+r=requests.request('POST','http://python123.io/ws',data=body)
+
+3.json:JSON格式的数据，作为Request的内容，向服务器提交
+例：
+kv={'key1':'value1'}
+r=requests.request('POST','http://python123.io/ws',json=kv)
+
+4.headers:字典，HTTP定制头
+例：
+hd={"user-agent":"Chrome/10"}
+r=requests.request('POST','http://python123.io/ws',headers=hd)
+
+
+5.cookies：从HTTP协议中解析cookies
+6.auth：元组，支持HTTP的认证功能
+7.files：字典类型，传输文件
+例:
+fs={'file':open("data.xls",'rb')}
+r=requests.request('POST','http://python123.io/ws',files=fs)
+8. timeout:设定超时时间，以秒为单位
+例：（当发起一个GET请求时，可以设置一个timeout时间，如果在timeout时间内请求内容没有返回，则返回requests.Timeout异常）
+r=requests.request('GET','http://python123.io/ws',timeout=10）
+9. proxies：字典类型，设定访问代理服务器，可以增加登陆认证
+例：(设置代理之后，访问百度时所使用的IP地址，就是代理服务器的IP地址，可以隐藏用户的原IP)
+pxs={“http”：“http://uesr:pass@10.10.10.1:1234”,
+        "https"：“https://10.10.10.1:4321”}
+r=requests.request('GET','http://www.baidu.com',proxies=pxs）
+
+10.allow_redirects：是一个开关，默认为True，表示允不允许对url重定向
+11. stream：也是一个开关，默认是True，表示是否对获取内容立即下载
+12. verify : 默认为True，认证SSL证书开关
+13.cert：本地SSL证书路径
+
+
+requests库的其他几个方法：
+requests.get()   
+requests.head()   
+requests.post()  
+requests.put()    
+requests.patch()    
+requests.delete()  
+他们的控制参数**kwargs与requests.request相同
+
+
+
+
+
+
+
+
+
+
+
+requests.get( url ,  params=None , **kwargs)  
+url: 要获取页面的url链接
+params ：url中的额外参数，字典或字节流的格式，可选
+**kwargs ：12个控制访问的参数
+
+例子：
+r=requests.get("http://www.baidu.com")
+进行请求之后，会返回一个Response对象，该Response对象的几个常用属性
+r.status_code     HTTP请求的返回状态，200表示连接成功，404表示失败，还有其他状态码
+r.text      HTTP响应内容的字符串形式，即url页面对应的内容
+r.encoding      从HTTP  header中猜测的响应内容编码方式，如果header中不存在charset，则认为编码为ISO-8859-1（这个编码不能解析中文）
+r.apparent_encoding     从内容中分析出的响应内容编码方式（备选编码方式）  
+r.content    HTTP响应内容的二进制形式
+
+
+所以用requests访问的流程为：
+先请求r=requests.get("http://www.baidu.com")，然后进行判断r.status_code ，如果状态码是200，就可以用r.content    r.apparent_encoding     r.encoding      r.text      去解析返回的内容，如果状态码404或者其他，说明某些原因出错产生异常了
+
+对于爬取的内容，有些用r.encoding     中的编码不能解析，或解析为乱码，要将其编码换成r.apparent_encoding  中的编码，即r.encoding=‘r.apparent_encoding 编码’，因为r.apparent_encoding  是经过分析内容确定的编码，比较准确
+
+
+
+
+
+
+
+
+Requests库的异常
+requests.ConnectionError    网络连接错误异常，如DNS查询失败，拒绝连接等
+requests.HTTPError              HTTP错误异常，HTTP协议层面的异常
+requests.URLRequired           URL缺失异常，
+requests.TooManyRedirects        超过最大重定向次数，产生重定向异常
+requests.ConnectTimeout           连接远程服务器超时异常
+requests.Timeout                     请求URL超时，产生超时异常
+
+
+Response对象的一个方法：raise_for_status()  ,该方法能判断返回的类型是不是200，如果不是则产requests.HTTPError 异常  
+
+爬取网页的入门级的通用代码框架例子：(这个框架使爬取网页变得更可靠，更有效)
+（网络连接有风险，异常处理很重要）
+import  requests
+def getHTMLText(url):
+      try:
+ 	r=requests.get(url,timeout=30)
+	r.raise_for_status() #如果不是200,则产requests.HTTPError 异常  
+	r.encoding=r.apparent_encoding
+	return r.text
+      except:
+	return '产生异常'
+
+if   __name__=="__main__":
+	url="http://www.baidu.com"
+	print(getHTMLText(url))
+
+
+
+
+
+
+
+
+---------------------------------
+HTTP协议
+HTTP是一个基于“请求与响应”模式的，无状态的应用层协议
+
+用户发起请求，服务器响应就是请求与响应模式，无状态是指第一次请求与第二次请求并没有关联，应用层协议指的是该协议工作在TCP协议之上
+
+HTTP协议采用URL作为定位网络资源的标识
+URL格式：http://host[:port] [path]
+host:合法的Internet主机域名或IP地址
+port :端口号，缺省端口为80
+path:请求资源的路径
+
+HTTP URL的理解：
+URL是通过HTTP协议存取资源的Internet路径，就像我们电脑里边的一个文件的路径一样，只不过这个文件不在电脑里，而在Internet上，每一个URL对应了Internet上的一个数据资源
+
+HTTP协议对资源的一些操作
+方法：
+GET     
+HEAD
+POST
+PUT
+PATCH
+DELETE
+
+
+
+
+
+
+限制爬虫：
+1.审查来源（可以通过User-Agent）
+2. 通过Robots协议进行告知
+
+
+Robots协议
+Robots  Exclusion  Standard  网络爬虫排除标准
+作用：网站告知网络爬虫哪些页面可以抓取，哪些不行
+使用:在网站的根目录下放置robots.txt文件，在这个文件中写明了哪些页面可以抓取，哪些不行
+例：访问百度的robots协议www.baidu.com/robots.txt
+
+
+
+
+
+
+
+
+
+
+
+
+-------------------------
+beautifulsoup4库
+安装  pip  install  beautifulsoup4
+导入：from bs4 imprt BeautifulSoup（bs4是beautifulsoup4的简写）
+Beautiful Soup库（解析HTML文件和xml文件的功能库）
+BeautifulSoup库也叫beautifulsoup4库，或bs4库
+常用的引用方式：from bs4 imprt BeautifulSoup，import bs4
+例子：
+from bs4 import BeautifulSoup
+soup=BeautifulSoup(demo,"html.parser")  (html.parser是一个html解析器，demo是一个HTML文件)
+
+
+常见的解析器：
+bs4的HTML解析器：使用方法：BeautifulSoup(demo,"html.parser")，解析器html.parser，需要安装bs4库
+lxml的HTML解析器：使用方法：BeautifulSoup(demo,“lxml”)，解析器lxml，需要安装lxml（pip install lxml）
+lxml的xml解析器：使用方法：BeautifulSoup(demo,“xml”)，解析器xml，需要安装lxml（pip install lxml）
+html5lib的解析器：使用方法：BeautifulSoup(demo,"html5lib“)，解析器html5lib，需要安装html5lib（pip install html5lib）
+
+
+
+
+
+
+
+
+对于BeautifulSoup类基本元素的例子：
+对于soup=BeautifulSoup(demo,'html.parser')
+soup输出为下面的内容：
+<html><head><title>This is a python demo page</title></head>
+<body>
+<p class="title"><b>The demo python introduces several python courses.</b></p>
+<p class="course">Python is a wonderful general-purpose programming language. You can learn Python from novice to professional by tracking the following courses:
+
+<a class="py1" href="http://www.icourse163.org/course/BIT-268001" id="link1">Basic Python</a> and <a class="py2" href="http://www.icourse163.org/course/BIT-1001870001" id="link2">Advanced Python</a>.</p>
+</body></html>
+
+tag=soup.a
+
+BeautifulSoup类的基本元素（下面使用的例子中的soup为上面代码的soup，tag为上面的tag）
+
+1. Tag（标签，最基本的信息组织单元，分别用<>和</>标明开头和结尾）
+使用的例子：  
+soup.a（获取a标签的信息，但是只能获取第一个a标签） 输出为： <a class="py1" href="http://www.icourse163.org/course/BIT-268001" id="link1">Basic Python</a>
+
+print(soup.title)  # 获取html的title标签的信息
+print(soup.a)  # 获取html的a标签的信息(soup.a默认获取第一个a标签，想获取全部就用for循环去遍历)
+
+
+
+2. Name （标签的名字，<p>...</p>的名字是‘p',格式：<tag>.name）
+使用的例子：
+soup.a.name（获取a标签的名字）   输出为：    'a'     
+soup.a.parent.name（获取a标签的父标签的名字） 输出为：  'p'
+
+print(soup.a.name)   # 获取a标签的名字
+print(soup.a.parent.name)   # a标签的父标签(上一级标签)的名字
+print(soup.a.parent.parent.name)  # a标签的父标签的父标签的名字
+
+
+3. Attributes (标签的属性，字典形式组织，格式：<tag>.attrs)
+使用的例子： 
+tag.attrs（获取a标签的属性）  输出为： {'href': 'http://www.icourse163.org/course/BIT-268001', 'class': ['py1'], 'id': 'link1'}
+
+print('a标签类型是：', type(soup.a))   # 查看a标签的类型
+print('第一个a标签的属性是：', soup.a.attrs)  # 获取a标签的所有属性(注意到格式是字典)
+print('a标签属性的类型是：', type(soup.a.attrs))  # 查看a标签属性的类型
+print('a标签的class属性是：', soup.a.attrs['class'])   # 因为是字典，通过字典的方式获取a标签的class属性
+print('a标签的href属性是：', soup.a.attrs['href'])   # 同样，通过字典的方式获取a标签的href属性
+
+
+
+4. NavigableString （标签内非属性字符串，<>..</>中字符串，格式：<tag>.string）
+使用的例子：
+tag.string（获取第一个a标签中的内容，a标签两个尖括号之间的内容）  输出为：  'Basic Python'
+
+
+print('第一个a标签的内容是：', soup.a.string)  # a标签的非属性字符串信息，表示尖括号之间的那部分字符串
+print('a标签的非属性字符串的类型是：', type(soup.a.string))  # 查看标签string字符串的类型<class'bs4.element.NavigableString'>
+print('第一个p标签的内容是：', soup.p.string)  # p标签的字符串信息(注意p标签中还有个b标签，但是打印string时并未打印b标签，说明string类型是可跨越多个标签层次)
+
+
+
+5. Comment（标签内字符串的注释部分，一种特殊的Comment类型）
+获取到注释的字符串时，该字符串类型是Comment类型    例子：如果a中的内容是注释掉的，则type(soup.a.string))输出为<class 'bs4.element.Comment'>
+
+
+
+
+
+
+
+
+
+
+基于bs4库的遍历HTML的内容的方法（HTML可以看成是一个标签树）
+1. 标签树的下行遍历
+属性：
+(1)  .content     子节点的列表（返回的是列表类型），将<tag>所有儿子节点存入列表
+例子：soup.html.content
+(2) .children     子节点的迭代类型，与.contents类似，用于for循环遍历儿子节点
+例子：（遍历儿子节点）
+for i in soup.html.children:
+	print(i)
+(3) .descendants    子孙节点的迭代类型，包含所有子孙节点，用于for循环遍历
+例子：（遍历子孙节点）
+for i in soup.html.descendants:
+	print(i)
+
+
+
+2.标签树的上行遍历
+属性：
+(1) .parent        节点的父亲标签
+例子：soup.title.parent      <head><title>This is a python demo page</title></head>
+(2) .parents       节点先辈标签的迭代类型，用于循环遍历先辈节点（不仅包括父亲，包含父亲的父亲甚至更先辈的内容）
+例子：(打印所有先辈标签的名字)
+for i in soup.title.parents: 
+      print(i.name)
+
+
+
+
+3. 标签树的平行遍历（平行遍历发生在同一个父节点下的各节点间）
+(1)  .next_sibling      返回按照HTML文本顺序的下一个平行节点标签
+例子： soup.a.next_sibling      输出：' and '（a标签的下一个平行节点是一个字符串”and“，说明在标签树中，尽管树形结构采用的是标签的形式来组织，但是标签之间的NavigableString类型的字符串也构成了标签树的节点，也就是说，任一个节点他的平行标签，他的儿子标签是可能存在NavigableString类型的）
+(2) .previous_sibling    返回按照HTML文本顺序的上一个平行节点标签
+例子：soup.a.previous_sibling      输出为：'Python is a wonderful general-purpose programming language. You can learn Python from novice to professional by tracking the following courses:\r\n'（与soup.a.next_sibling 类似）
+(3) .next_siblings      迭代类型，返回按照HTML文本顺序的后续所有平行节点标签
+例子：for i in soup.a.next_siblings:
+	print(i)
+输出：
+ and 
+<a class="py2" href="http://www.icourse163.org/course/BIT-1001870001" id="link2">Advanced Python</a>
+.
+(4) .previous_siblings      迭代类型，返回按照HTML文本顺序的前续所有平行节点标签
+例子：for i in soup.a.previous_siblings:  (与.next_siblings 类似)
+	print(i)
+
+
+
+
+
+
+
+
+
+
+-----------
+基于bs4库的HTML格式输出
+prettify()方法：为HTML文本的标签和内容增加换行符，也可以对每一个标签进行处理
+例子：（对一个标签进行操作）
+print(soup.a.prettify())
+<a class="py1" href="http://www.icourse163.org/course/BIT-268001" id="link1">
+ Basic Python
+</a>
+例子：
+soup.prettify()
+输出为：（可以看到将每个标签及内容后面加了换行符\n）
+'<html>\n <head>\n  <title>\n   This is a python demo page\n  </title>\n </head>\n <body>\n  <p class="title">\n   <b>\n    The demo python introduces several python courses.\n   </b>\n  </p>\n  <p class="course">\n   Python is a wonderful general-purpose programming language. You can learn Python from novice to professional by tracking the following courses:\n   <a class="py1" href="http://www.icourse163.org/course/BIT-268001" id="link1">\n    Basic Python\n   </a>\n   and\n   <a class="py2" href="http://www.icourse163.org/course/BIT-1001870001" id="link2">\n    Advanced Python\n   </a>\n   .\n  </p>\n </body>\n</html>'
+输出：print(soup.prettify())
+<html>
+ <head>
+  <title>
+   This is a python demo page
+  </title>
+ </head>
+ <body>
+  <p class="title">
+   <b>
+    The demo python introduces several python courses.
+   </b>
+  </p>
+  <p class="course">
+   Python is a wonderful general-purpose programming language. You can learn Python from novice to professional by tracking the following courses:
+   <a class="py1" href="http://www.icourse163.org/course/BIT-268001" id="link1">
+    Basic Python
+   </a>
+   and
+   <a class="py2" href="http://www.icourse163.org/course/BIT-1001870001" id="link2">
+    Advanced Python
+   </a>
+   .
+  </p>
+ </body>
+</html>
+
+
+
+-------
+bs4库中的编码，bs4将读入任何读入的html文件或字符串都转换为utf8编码
+
+
+
+
+
+
+
+
+----------
+信息标记的三种形式
+1. xml      通过标签形式来构建信息
+例：<name>...</name>     <name   />     <!--       -->
+2. json     有类型的键值对"key" : "value"	
+例：
+“name” : "北京理工大学"
+"name" : ["北京理工大学" , "延安自然科学院"]    （值的地方有多个信息与键对应，用列表的形式）
+“name” : {
+       "newname" : "北京理工大学"，
+       “oldname” : "延安自然科学院"
+}  （键值对嵌套使用）
+3. yaml     无类型的键值对key : value  (通过缩进来表达所属关系，通过 - 表达并列关系，| 表示整块数据，# 表示注释)
+例：
+name : 北京理工大学  （没有双引号的形式）
+
+name :                                         （通过缩进表示所属关系）
+     newname : 北京理工大学
+     oldname : 延安自然科学院
+
+name :                            （通过-来表达并列关系）
+-北京理工大学
+-延安自然科学院
+
+
+text :  |       #yaml介绍               (当value很长时，用竖线| 表示整块数据，#表示注释 )
+YAML的语法和其他高级语言类似，并且可以简单表达清单、散列表，标量等数据形态。它使用空白符号缩进和大量依赖外观的特色，特别适合用来表达或编辑数据结构、各种配置文件、倾印调试内容、文件大纲（例如：许多电子邮件标题格式和YAML非常接近）。尽管它比较适合用来表达层次结构式（hierarchical model）的数据结构，不过也有精致的语法可以表示关系性（relational model）的数据。
+
+
+
+
+
+
+
+
+
+
+
+
+-------------
+基于bs4的HTML内容查找方法
+.find_all(name, attrs, recursive, string, **kwargs)方法
+返回一个列表类型，存储查找的结果
+name：对标签名称的检索字符串
+例：
+soup.find_all("a")  （返回了一个列表，列表中包含了所有的a标签）
+[<a class="py1" href="http://www.icourse163.org/course/BIT-268001" id="link1">Basic Python</a>, <a class="py2" href="http://www.icourse163.org/course/BIT-1001870001" id="link2">Advanced Python</a>]
+
+soup.find_all(["a","b"])（搜索a标签和b标签，列表中包含所有的a标签和b标签）
+[<b>The demo python introduces several python courses.</b>, <a class="py1" href="http://www.icourse163.org/course/BIT-268001" id="link1">Basic Python</a>, <a class="py2" href="http://www.icourse163.org/course/BIT-1001870001" id="link2">Advanced Python</a>]
+
+soup.find_all(True)（当name为True时，返回所有标签的信息）
+
+soup.find_all(re.compile("b"))（用正则表达式，返回以b开头的标签，即body    ，b）
+
+attrs：对标签属性值的检索字符串，可标注属性检索
+例：
+soup.find_all('p','title')（在p标签中，检索带有属性title的p标签）
+[<p class="title"><b>The demo python introduces several python courses.</b></p>]
+
+soup.find_all(id="link1")  (返回属性带有id=link1的标签)
+[<a class="py1" href="http://www.icourse163.org/course/BIT-268001" id="link1">Basic Python</a>]
+
+
+recursive：是否对子孙全部检索，默认True
+例：
+soup.find_all("a")  （recursive默认是True，对所有子孙全部检索）
+[<a class="py1" href="http://www.icourse163.org/course/BIT-268001" id="link1">Basic Python</a>, <a class="py2" href="http://www.icourse163.org/course/BIT-1001870001" id="link2">Advanced Python</a>]
+
+soup.find_all("a",recursive=False) (当把recursive置为false时，不对子孙全部检索，返回了一个空列表，说明在soup这个根节点上开始，他的儿子节点层面是没有a标签，a标签应该在子孙的后续的标签上)
+[]
+
+
+
+string：<>...</>中字符串区域的检索字符串
+例：
+soup.find_all(string="Basic Python")   （搜索Basic Python 字符串）
+['Basic Python']
+soup.find_all(string=re.compile("python"))   （用正则表达式搜索带有python的字符串）
+['This is a python demo page', 'The demo python introduces several python courses.']
+
+
+
+.find_all()的一种简写形式：<tag>(..)=<tag>.find_all(..)   ,即soup.find_all(..)  等价于 soup(..)
+
+
+find_all()方法很常用，还有几个扩展的方法
+<>.find()               搜索且只返回一个结果，字符串类型，同find_all参数
+<>.find_parents()       在先辈节点中搜索，返回列表类型，同find_all参数
+<>.find_parent()         在先辈节点中返回一个结果，字符串类型，同find_all参数
+<>.find_next_siblings()       在后续平行节点中搜索，返回列表类型，同find_all参数
+<>.find_next_sibling()         在后续平行节点中返回一个结果，字符串类型，同find_all参数
+<>.find_previous_siblings()        在前序平行节点中搜索，返回列表类型，同find_all参数
+<>.find_previous_sibling()        在前序平行节点中返回一个结果，字符串类型，同find_all参数
+
+
+
+
+
+
+
+
+
+
+
+
+---------------------
+正则表达式：
+使用：
+简洁表达一类字符串
+查找或替换一组字符串
+匹配字符串的全部或部分
+主要用于字符串匹配中
+
+语法：
+.   表示任何单个字符(除换行符)
+[ ]   字符集，对单个字符给出取值范围。例如：【abc】 表示abc中的一个字符【a-z】表示a到z其中的一个字符
+[^ ]  非字符集， 对单个字符给出排除范围        例如：【^abc】表示不是a，不是b，不是c的其他单个字符
+*    前一个字符0次或者无限次扩展             例如：abc*表示ab，abc，abcc，abccc,........
++    前一个字符1次或无限次扩展            例如：abc+表示 abc，abcc，abccc，.......
+?    前一个字符出现0次或者1次         例如:  abc？表示ab，abc
+|     表示左右表达式选择任意一个        例如：abc|def    表示abc，或者def
+{ m }   扩展前一个字符m次  ，{ }中什么都不加就是{1，正无穷}                  例如：ab{2}c 表示 abbc
+{ m，n }    扩展前一个字符m至n次（含n）   例如：ab{ 1,2 }c表示abc，abbc
+^(没在[]中)      只在字符串的开头匹配         例如：^abc表示只匹配以abc开头的字符串abc 。 afafabcd就匹配不到abc
+$        在字符串结尾匹配            例如：abc$ 表示只匹配以abc结尾的字符abc  。  fdaabcdsaads就匹配不到abc
+( )   分组标记，内部只能使用 | 操作符        例如：（abc）表示abc，（abc|def）表示abc或者def
+\d     数字，等价于[ 0-9 ]                   
+\w          单词字符 ，等价于[ A-Za-z0-9_]    
+
+
+
+
+re库
+python的标准库（非第三方）
+主要用于字符串的匹配
+
+re库使用raw string类型来表达正则表达式
+raw string类型也叫原生字符串类型   表示为：r“text”
+原生字符串类型跟字符串类型所不同的是，只需要在字符串前加一个r，
+原生字符串（raw string）是不包含转义符的字符串，原生字符串的 \ 不被解释为转义符，去掉python里的转义符
+string类型也可表达正则表达式，但是因为有转义字符，会更繁琐
+
+所以建议:当正则表达式中出现转义符时，请使用raw string来表达正则表达式
+
+
+re库常用的函数
+re.search(pattern，string，flags=0)    
+re.match(pattern，string，flags=0)
+re.findall(pattern，string，flags=0)
+re.split(pattern，string，maxsplit=0，flags=0)     maxsplit：最大分割数，剩余部分作为最后一个元素输出
+re.finditer(pattern，string，flags=0)
+re.sub(pattern，repl，string，count=0，flags=0)   repl：替换匹配字符串的字符串    count：匹配的最大替换次数
+
+pattern：正则表达式的字符串或者原生字符串表示
+string：待匹配的字符串
+flags：正则表达式的控制标记
+常用标记：re.I，re.M，re.S
+re.I：忽略正则表达式的大小写，比如：[A-Z]能匹配小写字符
+re.M：对正则表达式中的^操作符的控制，能将给定字符串的每行当作匹配开始
+re.S：对正则表达式中的 . 操作符的控制, 能匹配所有字符，包括换行符。默认 . 字符不包括换行符
+
+
+
+re库的另一种用法：(面向对象的用法，编译后可多次操作)
+pat=re.compile(r"[1-9]\d{5}")    #将正则表达式的字符串编译成正则表达式的类型
+rst=pat.search("bit  109321")    #用pat对象直接调用方法
+
+re.compile(pattern，flags=0)
+将正则表达式的字符串形式编译成正则表达式的对象，之后就可以调用其方法
+（在程序内部认为只有经过compile编译的正则表达式才是正则表达式，没有经过编译的只是正则表达式的一种表示）
+
+
+
+
+
+
+
+re库的match对象
+re.search()，re.match()，re.finditer()等方法匹配之后会返回一个match对象
+例：
+dasm=re.search("[1-9]\d{4}","da12432213ad")
+type(dasm)   <class 're.Match'>
+
+match对象的一些属性：
+1.   .string       匹配时用的字符串
+2.   .re            匹配时用的正则表达式
+3.   .pos          匹配的开始位置，即从哪个位置开始匹配了
+4.   .endpos     匹配的结束位置
+match对象的一些方法：
+1.     .group(0)      匹配的结果，match对象只包含一次匹配的结果，如果一个字符串存在两次匹配则只会返回第一次匹配的结果
+2.     .start()        匹配到的字符串在原字符串的那个位置（开始的，第一个字符的位置）
+3.     .end()         匹配到的字符串在原字符串的那个位置（结束的，最后一个字符的位置）
+4.     .span()      返回一个元组（.start, .end）,既有开始位置，又有结束位置
+
+通过这些属性和方法可以获取匹配时的一些信息（比如：匹配时用的正则表达式，匹配时用的字符串，匹配到的信息。。。。等等）
+
+
+
+
+
+
+
+re库的贪婪匹配和最小匹配
+例子:
+match=re.match(r"py.*n","pyanbncndn")
+这个匹配存在多个匹配，pyan，pyanbn，pyanbncn，pyanbncndn，
+match.group(0)，  输出：'pyanbncndn'
+所以默认采用贪婪匹配，匹配最长的。
+
+如果要最小匹配，则
+match=re.match(r"py.*?n","pyanbncndn")，在 .*的后面加一个？
+match.group(0)，  输出：'pyan'
+
+所以，要获得最小匹配，要对一些操作符进行扩展
+以下是最小匹配操作符：
+*？    前一个字符0次或者无限次扩展 ,最小匹配
++？   前一个字符1次或无限次扩展 ，最小匹配
+??        前一个字符出现0次或者1次 ，最小匹配 
+{m,n}?      扩展前一个字符m至n次（含n），最小匹配
+
+
+
+
+
+
+
+以上来源于视频https://www.bilibili.com/video/av9784617
+------------------------------------------------------------------------
+
+
+
+
+
+-------------------------------------------
+scrapy库
+是一个爬虫框架---->>5+2结构
+scrapy五个模块：SPIDERS（爬虫）, ENGINE（引擎）, SCHEDULER（调度器）, DOWNLOADER（下载网页）, ITEM PIPELINES（管道，用来保存数据的） 
+还有两个中间件（middleware）
+在SPIDERS 和ENGINE 之间有一个spider中间件，在DOWNLOADER和ENGINE 之间有个downloader中间件
+ENGINE  SCHEDULER  DOWNLOADER这三个模块已经被写好了，不需要我们编写，我们主要编写SPIDERS模块，还有pipelines模块，之后还有中间件模块
+
+
+
+
+scrapy执行流程：
+SPIDERS模块用来提供要爬的网站的url，然后向ENGINE发出请求，然后ENGINE 将请求发送给 SCHEDULER，SCHEDULER再将请求的url进行调度（就是将要爬的网站通过一定的算法进行一个排队，看哪个网站先爬，那个后爬），之后就将排队后的网站请求通过ENGINE发给DOWNLOADER，DOWNLOADER就在互联网上进行下载网页，下载之后，将数据（response）通过ENGINE返回给SPIDERS，然后在SPIDERS中就可以将数据进行处理，然后就将处理过的数据通过ENGINE给ITEM PIPELINES，ITEM PIPELINES就可以将数据存入数据库，或者进行其他的操作。如果DOWNLOADER中返回给SPIDERS的数据中有新的url，就可以继续发送请求给SCHEDULER，继续爬取
+
+
+
+新建项目：scrapy startproject  项目名称  （其中.cfg文件是部署相关的文件）
+创建爬虫： scrapy genspider 爬虫名称   爬取网站的域名（创建爬虫也可以自己在spiders文件夹中创建，不过创建类时要继承scrapy.Spider类，（最基础的类）。   编写parse函数）（创建爬虫的名字与项目名字不能一样）（网站的域名是允许爬虫采集的域名，后面可以删掉）
+
+运行爬虫：scrapy crawl  爬虫名字
+例子：
+import scrapy
+
+class DemoSpider(scrapy.Spider):
+    name = 'demo'       #爬虫的名字 ---->>必须唯一
+    #allowed_domains = ['python123.io']  #允许采集的域名
+    start_urls = ['http://python123.io/ws/demo.html']  #开始采集的网站
+
+#parse函数：解析响应数据，提取数据或者网址等。  response就是响应（网页源码）
+    def parse(self, response):
+        fname=response.url.split("/")[-1]
+        with open(fname,'wb') as f:
+            f.write(response.body)
+        self.log("save file %s." % fname)
+
+
+解析响应数据，提取数据可以用：正则表达式，xpath，css
+xpath    ---  response.xpath(xpath语法).get()       get()是获取一个元素，getall（）是多个元素
+
+
+
+---------------------
+yield生成器
+
+
+
+
+----------------------
+pipeline的编写：
+这个模块是专门用来保存数据的，其中有三个方法是经常用到的
+1. open_spider(self , spider)： 当一个爬虫被打开的时候pipeline执行的方法
+2. close_spider(self , spider)：当一个爬虫被关闭时pipeline执行的方法
+3. process_item(self , item , spider)：当爬虫有item传过来的时候会调用
+
+之后，要在settings中设置ITEM_PIPELINES,告诉scrapy这个框架，我们的pipeline的类，让他能找到我们的类
+
+
+
+
+---------------
+item的编写：
+可以在item中定义字段
+例：
+class BmwItem(scrapy.Item):
+    title=scrapy.Field()
+    image_urls=scrapy.Field()
+    images=scrapy.Field()
+
+
+
+
+
+----------
+CrawlSpider（继承自Spider）
+scrapy中另外一个比较强大的类，与scrapy.Spider这个基本爬虫相比，功能更强
+scrapy.Spider这个爬虫，当我们爬取一页数据后，我们要去爬取第二页的数据，我们需要自己去yield，发送一个请求过去，但在CrawlSpider中可以设定一些规则，即满足什么条件的 url 就去下载，不满足的就 不下载 
+
+
+创建CrawlSpider爬虫
+scrapy genspider -t crawl   [爬虫名字]  [域名] （这里加的-t是用来指定模板的，这里用的是crawl的这个模板）
+
+CrawlSpider中需要用到的两个东西：
+LinkExtractors链接提取器   ， Rule规则
+
+使用LinkExtractors 可以不用程序员自己提取想要的url，然后发送请求，这些工作都可以交给LinkExtractors，他会在所有爬到页面中找到	满足规则的url，实现自动的爬取。
+class scrapy.linkextractors.LinkExtractor(
+	allow=(),
+	deny=(),
+	allow_domains=(),
+	deny_domains=(),
+	deny_extensions=None,
+	restrict_xpaths=(),
+	tags=('a','area'),
+	attrs=('href'),
+	canonicalize=True,
+	unique=True,
+	process_value=None,
+)
+主要参数：
+allow   允许的url，所有满足这个正则表达式的url都会被提取
+deny    禁止的url，所有满足这个正则表达式的url都不会被提取
+allow_domains：   允许的域名，只有在这个里面指定的域名的url才会被提取
+deny_domains：   禁止的域名，所有在这个里面指定的域名的url都不会被提取
+restrict_xpaths:      严格的xpath。和allow共同过滤链接
+
+前两个allow 和 deny 用的较多
+
+
+Rule规则
+class scrapy.spiders.Rule(
+	link_extractor
+	callback=None
+	cb_kwargs=None
+	follow=None
+	process_links=None
+	process_request=None
+)
+主要参数讲解：
+link_extractor    是一个LinkExtractor对象，用于定义爬取规则。把这个对象放在rule中就可以告诉他哪些url可以去爬取
+callback     满足这个规则的url，应该要执行哪个回调函数。因为CrawlSpider使用了parse作为回调函数，因此不要覆盖parse作为自己的回调函数
+follow        指定根据该规则从response中提取的链接是否需要跟进
+process_links        从link_extractor中获取到链接后会传递给这个函数，用来过滤不需要爬取的链接
+
+
+例子：(创建的CrawlSpider爬虫)
+class WxcrawlspiderSpider(CrawlSpider):       #继承自CrawlSpider
+    name = 'wxcrawlspider'
+    allowed_domains = ['www.wxapp-union.com']
+    start_urls = ['http://www.wxapp-union.com/']
+
+    rules = (
+        Rule(LinkExtractor(allow=r'Items/'), callback='parse_item', follow=True),
+    )
+
+    def parse_item(self, response):
+        item = {}
+        return item
+
+callback 指定回调函数时，不要用parse函数，因为这个crawlspider这个类在底层会调用parse，所以也不要重写parse函数
+
+
+所以， 在rules = (Rule(LinkExtractor(allow=r'Items/'), callback='parse_item', follow=True),)中，
+LinkExtractor 可以从刚开始的页面中获取到符合allow规则的 url，然后follow来决定是否对这些获取到的url进行跟进，如果follow 设置为True，则跟进，就会对更多url 进行访问，然后继续获取到更多的url，如果不跟进，则不会对获取到的url进行请求。只会得到第一个页面的信息
+
+什么情况下使用follow：如果在爬取页面的时候，需要将满足当前条件的url再进行跟进，那么就设置为True，否则设置为False
+
+什么情况下使用callback：如果这个url对应的页面，只是为了获取更多的url，并不需要里面的数据，那么可以不指定callback。如果要获取页面的数据，则需要指定一个callback
+
+
+
+
+
+
+
+
+-------------------------
+xpath语法
+from lxml import etree
+lxml是一个专门用于解析xml 语言的库
+例子：
+import requests
+from lxml import etree
+r=requests.get("https://www.pearvideo.com/category_8")
+r_xml=etree.HTML(r.text)  #将网页变为xpath结构
+
+type(r_xml)  ---->>  lxml.etree._Element
+
+r_xml.xpath('/html/head/title/text()')  #用xpath方法，路径使用的绝对路径，绝对路径可以直接在html页面中copy，然后用text()提取文字
+
+用  //  提取任意标签，// 后面是要提取的标签的名字
+r_xml.xpath('//title/text()')     #相对路径提取， //title就能提取到title标签 
+r_xml.xpath('//a/text()')      #a标签有很多，该方法提取到所有的a标签的内容
+r_xml.xpath('//a[@class]/text()')        #提取包含class属性的a标签   ，写属性的时候，在中括号写@
+r_xml.xpath('//a[@class="menu"]/text()')       #提取包含class属性，并且其值是‘menu’的a标签
+r_xml.xpath('//a[@class="menu" and @href='live']/text()')   # 可以包含多个属性，多个属性之间要用and连接
+
+r_xml.xpath('//ul[@id="categoryList"]/li[1]//a[@class="vervideo-lilink actplay"]/@href')        
+#提取a标签的href属性的值
+#提取属性的值也用@，还有如果ul标签下有多个li标签，可以对标签进行切片li[1]，来提取某一个li标签
+
+for li in r_xml.xpath('//ul[@id="categoryList"]/li'):   
+    print(li.xpath("./div/a/@href"))
+
+#for循环对ul标签下的li标签进行遍历，然后再用 li 标签进行二次提取
+#二次提取，需要用  .   来表明是在当前路径的基础上继续进行提取
+
+
+
+
+
+
+
+
+
+
+
+
+-------------------
+scrapy shell的使用
+scrapy shell 可以用来测试代码
+进入 scrapy shell 的方法：先进入你的项目的目录下，如果有虚拟环境，在进入你的项目的环境中，然后在cmd中输入
+（scrapy  shell   网址）    即可进入scrapy shell  进行测试。在这个地方，可以跟爬虫中的parse函数中一样使用
+也可以不进入项目中启动，但是这样就无法读取该项目的配置信息
+
+
+
+
+
+------------------------
+Request 和 Response
+
+Request对象scrapy.Request
+参数
+1. url      这个request对象发送请求的url
+2. callback    请求回来要执行哪一个函数
+3. method    请求的方法，默认为 GET，也可以设置其他方法  ，当发送POST时，建议使用Request的子类FormRequest实现，这个FormRequest是专门用来发送POST请求的
+4. headers    请求头，对于一些固定的设置，放在settings中，对于非固定的，可以在发送请求的时候指定
+5. meta      比较常用，用于在不同的请求之间传递数据用的。比如：在第一个网页爬到的信息，可以放在meta中传递给以后请求的网页的response去使用
+6. encoding     编码，默认为utf-8，
+7. dot_filter    表示不由调度器过滤，在执行多次重复的请求时用的较多。比如对于一些网页已经请求过的，不想再次请求就可以将其True，如果不管网页是否被请求过，都要再次请求，则可以将其置为False
+8. errback    在发生错误时执行的函数
+
+
+Response对象
+属性
+1. meta     从其他请求传过来的meta属性，可以保持多个请求之间的数据连接
+2. encoding    返回当前字符串编码和解码的格式
+3. text       将返回来的数据（网页的源代码）作为unicode字符串返回
+4. body     将返回来的数据（网页的源代码）作为bytes 字符串返回
+5. xpath    xpath选择器
+6. css    css选择器
+
+
+
+
+
+
+
+
+-----------------------
+发送POST请求
+当发送POST时，建议使用Request的子类FormRequest实现，这个FormRequest是专门用来发送POST请求的。
+如果要在一开始就发送POST请求，需要在爬虫类中重写start_requests(self) 方法，并且不再调用start_urls 里的url
+因为如果不重写，他默认就会去读取start_urls 中的url ，发送GET请求。所以要重写.
+start_requests(self) 这个方法中就是读取start_urls 中的url ,  然后发出请求
+
+如果发送一个请求，没有指定callback 方法，则就会自动执行parse方法
+
+
+模拟登录
+自动识别图形验证码
+可以调用阿里云的一些产品的接口进行识别
+
+
+所以模拟登录的步骤：
+先找到登陆页面的url，然后分析界面，找到要提交的表单数据，然后就在程序中配置各种表单数据，然后发送post请求，进行登陆	
+
+
+
+
+--------------------
+下载文件和图片
+scrapy中为下载文件提供了可重用的item pipelines。 这些pipeline 有些共同的方法和结构（我们称之为media  pipeline）。一般会用到 Files Pipeline 或者Images Pipeline
+
+为什么要用到scrapy内置的下载文件的方法：
+1. 避免重复下载最近已下载过的文件
+2. 可以方便的指定文件的存储路径
+3. 可以将下载的图片转换成通用的格式，比如png或jpg
+4. 可以方便的生成缩略图
+5. 可以方便的检测图片的宽和高，确保他们满足最小限制
+6. 异步下载，效率很高
+
+
+下载文件的 Files Pipeline：
+当使用Files Pipeline 下载文件的时候，按照以下步骤来进行：
+1. 定义好一个Item，然后在这个Item 中定义两个属性，分别为  file_urls 以及 files（如：file_urls=scrapy.Field()  ，files=scrapy.Field()）。file_urls是用来存储需要下载的文件的url链接，需要给一个列表
+2. 当文件下载完成后，会把文件的下载的相关信息存储到item的files 属性中，比如下载路径，下载的url和文件的校检码等。
+3. 在配置文件settings 中配置 FILES_STORE，这个配置是用来设置文件的下载路径的
+4. 启动pipeline   ，在ITEM_PIPELINES中设置scrapy.pipelines.files.FilesPipeline : 1
+
+
+
+下载图片的 Images Pipeline：
+当使用Images Pipeline 下载文件的时候，按照以下步骤来进行：
+1. 定义好一个Item，然后在这个item 中定义两个属性，分别为  image_urls 以及 images（如：image_urls=scrapy.Field()  ，images=scrapy.Field()）。image_urls是用来存储需要下载的图片的url链接，需要给一个列表
+2. 当文件下载完成后，会把文件的下载的相关信息存储到item的 images  属性中，比如下载路径，下载的url和图片的校检码等。
+3. 在配置文件settings 中配置 IMAGES_STORE，这个配置是用来设置图片的下载路径的
+4. 启动pipeline   ，在ITEM_PIPELINES中设置  scrapy.pipelines.images.ImagesPipeline : 1
+
+
+
+
+
+
+
+
+
+---------------------------------
+下载器中间件
+DOWNLOADER模块与ENGINE模块之间的
+可用来设置随机请求头和随机代理
+下载器中间件就是一个类，例如：class BmwDownloaderMiddleware(object)，继承自object，在middlewares.py中。
+然后要写中间件，就要实现其中的两个方法。一个是process_request(self, request, spider)，这个方法就像其名字一样，是请求处理，就是在ENGINE给DOWNLOADER发送请求的时候执行的，一个是process_response(self, request, response, spider)。这个方法是响应处理，是在DOWNLOADER给ENGINE发送响应的时候执行的
+
+process_request(self, request, spider)
+这个方法是请求处理，就是在ENGINE给DOWNLOADER发送请求的时候执行的，一般可在其中设置随机代理IP等
+参数：
+request：发送请求的request对象
+spider：发送请求的spider对象（就是哪个爬虫）
+
+返回值：
+返回None：如果返回None，Scrapy将继续处理该request，执行其他中间件中的相应方法，直到合适的下载器处理函数被调用。（在engine与下载器之间会有很多中间件）
+返回Response对象：Scrapy将不会调用任何其他的process_request方法，将直接返回这个response对象。已经激活的中间件的process_response（）方法则会在每个response返回时被调用
+返回Request对象： 如果返回了一个新的Request对象，就会将新的request对象给下一个中间件，最后给engine，则不再使用之前的request对象去下载数据，而是根据现在返回的request对象返回数据。
+如果这个方法抛出了异常，则会调用process_exception方法
+
+
+
+process_response(self, request, response, spider)
+这个是下载器下载的数据到引擎时中间件执行的方法
+参数：
+request：request对象
+response：被处理的response对象（将下载回来的数据包装成一个response对象）
+spider：spider对象（就是是哪个爬虫）
+
+返回值：
+返回Response对象:会将这个新的response对象传给其他中间件，最终传给爬虫
+返回Request对象：下载器链被切断，返回的request会重新被下载器调度下载
+如果抛出一个异常，那么调用request的errback方法，如果没有指定这个方法，那么会抛出一个异常
+
+
+
+
+
+
+----------------------------
+用下载器中间件设置随机请求头
+为什么设置随机请求头呢？ 因为当你高频率的爬取一个网站的时候，其网站可能会封你的请求头，所以我们要换请求头去爬取。
+http://useragentstring.com/pages/useragentstring.php?name=All
+这个网站有世界上所有的请求头，而且是比较新的
+例子：（在下载器中间件中设置了一个请求头的列表，然后在process_request函数中每次随机取一个作为请求头）
+class UserAgentDownloaderMiddleware(object):
+    uesr_agent_list = [
+        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36',
+        'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:64.0) Gecko/20100101 Firefox/64.0',
+        'Mozilla/4.0 (compatible; MSIE 8.0; AOL 9.7; AOLBuild 4343.27; Windows NT 5.1; Trident/4.0; .NET CLR 2.0.50727; .NET CLR 3.0.4506.2152; .NET CLR 3.5.30729)',
+        'Mozilla/5.0 (X11; U; UNICOS lcLinux; en-US) Gecko/20140730 (KHTML, like Gecko, Safari/419.3) Arora/0.8.0',
+        'Mozilla/5.0 (Windows; U; Windows NT 6.1; x64; fr; rv:1.9.2.13) Gecko/20101203 Firebird/3.6.13',
+        'Mozilla/5.0 (Macintosh; PPC Mac OS X 10_5_8) AppleWebKit/537.3+ (KHTML, like Gecko) iCab/5.0 Safari/533.16',
+    ]
+    def process_request(self, request, spider):
+        uesr_agent=random.choice(self.uesr_agent_list)   #choice可以在其列表中随机选择一个
+        request.headers['User-Agent']=uesr_agent
+
+
+之后在settings中把DOWNLOADER_MIDDLEWARES设置一下，设置为我们的这个中间件
+例子：user_agent.middlewares.UserAgentDownloaderMiddleware
+
+
+
+
+
+
+---------------------------------
+ip代理池中间件
+为什么设置代理ip呢？也是为了防止网站把你的ip封了，以至于不能取访问其网站
+
+购买代理：
+有以下网站：
+1. 芝麻代理：http://zhimaruanjian.com/
+2. 太阳代理：http://http.taiyangruanjian.com/
+3.快代理：http://www.kuaidaili.com/
+4. 讯代理：http://www.xdaili.cn/
+5. 蚂蚁代理：http://www.mayidaili.com/
+等购买代理
+
+然后设置ip代理
+以快代理网站为例：如果是开放代理，选好IP之后，则与设置请求头类似，创建一个列表，把选好的IP都放在列表中，然后随机从中选一个作为我们的代理IP，将值赋给request.meta['proxy']。如果是独享IP（只能我们用），则会设置一下用户名和密码。将其赋给request.headers["Proxy-Authorization"]
+
+可在E:\python程序\scrapy\user_agent\user_agent中查看代码
+
+
+
+
+
+
+
+
+
+
+----------------------
+爬取简书网站，并将其数据存入mysql数据库（代码可在E:\python程序\scrapy\jianshu中查看）
+可以用twisted来进行异步插入数据库的操作，效率更高
+from twisted.enterprise import adbapi   ，这个adbapi这个模块是专门用来做数据库处理的
+然后创建一个连接池ConnectionPool，
+self.dbpool=adbapi.ConnectionPool('pymysql',host='127.0.0.1',user='root',password="187563",
+database='jianshu', port=3306, charset='utf8',cursorclass=cursors.DictCursor)
+#twisted底层会根据你提供的这个pymysql参数去加载相应的模块，然后还要一个cursorclass=cursors.DictCursor这个参数，要指明用哪个cursor
+下面代码差不多较完整，可在程序中查看
+
+#新定义一个类，用来实现异步的数据库的插入
+class JanshuTwistedPipeline(object):
+    def open_spider(self,spider):
+        self.dbpool=adbapi.ConnectionPool('pymysql',host='127.0.0.1',user='root',password="187563",
+                 database='jianshu', port=3306, charset='utf8',cursorclass=cursors.DictCursor)#twisted会根据你提供的这个pymysql去加载相应的模块
+    def process_item(self,item,spider):
+        #调用runInteraction这个模块，然后再执行insert_item这个函数
+        #在insert_item这个函数中实现数据库的插入。
+        #必须要调用runInteraction这个，否则不是异步的，仍然和普通的插入一样
+        #传的item参数，也会传到insert_item函数中
+        #runInteraction这个执行完后会返回一个defer对象
+        #然后我们再定义一个函数，就是在runInteraction发生错误的时候会调用的函数
+        #所以调用defer对象的addErrback模块，然后定义一个函数，就是在发生错误时会调用的函数
+        defer=self.dbpool.runInteraction(self.insert_item,item)
+        defer.addErrback(self.handle_error,item,item,spider)
+
+    #在该函数中，除了传过来的item，还会传过来一个cursorclass的对象
+    def insert_item(self,cursor,item):
+        sql="insert into jianshu_article(title,content,pub_date,article_id,article_url) values('{}','{}','{}','{}','{}')".format(item['title'],item['article_content'],item['pub_time'],item['article_id'],item['article_url'])
+
+        cursor.execute(sql)
+
+    #这个函数的参数首先会有一个error的错误信息的参数，
+    # 然后就是addError中传递什么参数就有什么参数
+    def handle_error(self,error,item,spider):
+        print("="*10+'error'+'='*10)
+        print(error)
+        print("="*10+'error'+'='*10)
+
+
+
+
+
+还有一个爬取ajax数据的，需要用到selenium+chromedriver，将其集成到scrapy
+具体使用可参考视频https://www.bilibili.com/video/av57909837/?p=25
+
+
+
+
+
+
+
+
+
+
+
+
+--------------------------
+分布式爬虫
+与之前得到爬虫的区别，之前的爬虫是在一台机器上去爬取，而分布式爬虫就是有多个机器在同时爬取一个网站或多个网站。效率肯定会更高。在公司面试会是一个加分项
+
+scrapy-redis分布式爬虫组件（pip install scrapy-redis）
+
+分布式爬虫的优点：
+1. 充分利用多台机器的带宽
+2. 充分利用多台机器的IP地址
+3. 多台机器做，效率更高
+
+分布式爬虫的问题：
+1. 分布式爬虫是多台机器在同时运行，如何保证不同的机器爬取页面的时候不会出现重复爬取的情况
+2. 同样，分布式爬虫在不同机器上运行，怎样把数据爬完后放在同一个地方
+
+
+
+分布式爬虫的架构图的流程：
+就是在scrapy的流程的基础上，调度器将url传给redis，然后redis进行判断该url是否爬取过，如果没有，把url再给调度器，再去爬取。 然后是爬取的数据，爬虫传给pipeline后，pipeline把数据传给redis
+
+
+-------
+redis
+redis是一种支持分布式的nosql数据库（nosql不是关系型的数据库，保存什么东西就是什么东西）。数据是保存在内存当中的（所以内存最好足够大），同时，redis可以定时把内存数据同步到磁盘，将数据持久化
+
+redis的一些特性：
+1. 内存磁盘同步数据库（可以将内存中的数据同步到磁盘上）
+2. 存储时不需要定义数据类型
+3. 支持虚拟内存，就是当内存不够用时，可以调用磁盘一部分虚拟化为内存
+4. 支持过期策略（比如可以设置一个数据为几秒或者多长时间过期）
+5. 存储数据安全  ，可以将数据同步到dump.db中
+6. 灾难恢复，可以从dump.db中将数据恢复。比如你的服务器发生故障突然关机，可以通过dump.db将数据恢复到内存中
+7. 支持分布式  ，多台机器之间共享数据
+8. 支持订阅与发布
+
+
+
+
+redis的安装：
+redis有一个GUI图形界面的软件可以用来管理redis，redisdesktopmanager，可以去github下载
+
+
+其他机器怎样访问本机redis服务器：
+指令：redis-cli  -h  [ip]  -p 6379，然后还需要在redis的配置文件redis.windows.conf配置bind 为redis服务器的ip地址
+或者改为0.0.0.0 也可以。
+bind绑定的是本机网卡的ip地址，而不是想让其他机器连接的ip地址（应该是redis服务器的ip地址，而不是redis客户端的ip地址）。如果有多块网卡，那么可以绑定多个网卡的IP地址，如果绑定的是0.0.0.0，那么意味着其他机器可以通过本机的所有IP进行访问
+
+
+
+
+redis的操作（可以查看文档http://redisdoc.com/）
+--------
+redis字符串的操作：
+set key value   设置一个key值和value值
+get key    根据key获取值
+
+set age 18 EX 60   设置过期时间为60秒，在设置值的时候设置过期时间
+ttl age    查看过期时间
+
+expire key timeout    设置过期时间    对之前已经创建过的key设置过期时间
+keys *    查看所有的key
+
+-----------
+redis的列表操作：
+一个key下面对应一个列表
+
+例子：（如果websites这个列表之前不存在，执行添加指令会自动创建列表）
+lpush websites baidu.com   从左侧向列表中插入一个数据，这个列表就像一个管道，可以从左侧也可以从右侧插入
+rpush websites baidu.com   从右侧向列表中插入一个数据
+lrange websites 0 -1        查看这个key=websites 中的所有的值，当然也可以指定其他的范围
+lpop websites    从左侧弹出一个值
+rpop websites    从右侧弹出一个值
+lrem key count value    指定清除哪一个值，count代表清除该值的数量
+count >0  从列表开始数到结束，清除count个值   
+count <0   从列表尾部到首部，找到对应count个值，清除
+count =0   清除列表中所有的该值
+
+lrem websites  2 baidu.com  
+lrem websites  -2 baidu.com  
+lrem websites  0 baidu.com  
+
+lindex websites 1     检索， 找到websites对应列表中1位置的值
+llen  websites     找到该列表的长度
+
+
+
+-----------------
+redis集合操作（相当于python的集合）：
+添加元素： sadd  set value1 value2....
+例： sadd team1 yaoming 
+查看元素： smembers set
+例：smembers team1
+移除元素：srem set value....
+例：srem team1 yaoming
+查看集合中元素的个数：scard set
+例：scard team1
+获取多个集合的交集：sinter set1 set2
+例：sinter team1 team2 
+获取多个集合的并集：sunion set1 set2 
+例：sunion team1 team2
+获取多个集合的差集：sdiff set1 set2 
+例：sdiff team1 team2 
+
+
+-----------------------
+redis哈希操作：
+添加一个新值：hset key field value   将哈希表中key中的域field的值设为value，如果key不存在，一个新的哈希表被创建并进行hset操作，如果域field 已经存在与哈希表中，则旧值将被覆盖
+例：hset website baidu baidu.com 
+
+获取哈希中的field对应的值：hget key field
+例：hget website baidu
+
+删除某个field：hdel key field
+例：hdel website baidu
+
+获取某个哈希中所有的field和value
+hgetall key
+例：hgetall website
+
+获取某个哈希中所有的field：hkeys key
+例：hkeys website
+
+获取某个哈希中所有的值：hvals key
+例：hvals website
+
+判断哈希中是否存在某个field ： hexists key field
+例：hexists website baidu 存在返回1 ，不存在返回0
+
+获取哈希中总共的键值对的个数：hlen key
+例：hlen website
+
+
+
+
+-------------------------
+分布式爬虫实战房天下网站（在E:\python程序\scrapy\fang中可以查看代码，不过该程序未配置为分布式，只是一个爬虫程序）（要变成分布式爬虫，你首先也还是要先写爬虫，然后进行配置就可以，更详细的配置可观看视频https://www.bilibili.com/video/av57909837/?p=41）
+将一个scrapy项目变成一个scrapy-redis项目只需要修改一下三点就可以：
+1. 将爬虫的类从scrapy.Spider 变成scrapy_redis. spiders.RedisSpider ；或者是从scrapy.CrawlSpider变成scrapy_redis.spiders.RedisCrawlSpider
+2. 将爬虫的start_urls删掉，增加一个redis_key=“xxx”，这个redis_key是为了以后在redis中控制爬虫启动的。爬虫的第一个url，就是在redis中通过这个redis_key发送出去的
+3. 在配置文件中进行一些配置：
+#scrapy-redis的相关配置
+
+#确保request存储到redis中
+SCHEDULER="scrapy_redis.scheduler.Scheduler"    #调度器改为redis的
+
+#确保所有的爬虫共享相同的去重指纹：（就是去重，防止重复爬取）
+DUPEFILTER_CLASS="scrapy_redis.dupefilter.RFPDuperFilter"
+
+#设置redis为item pipeline  ，用redis的pipeline，就把数据全都保存在redis中
+ITEM_PIPELINES={
+       'scrapy_redis.pipelines.RedisPipeline':300
+}
+
+#在redis中保持scrapy-redis用到的队列，不会清理redis中的队列，从而实现暂停和恢复的功能
+SCHEDULER_PERSIST=True   #相当于保存一个断点，就是当你的程序没执行完的时候，电脑关机了，然后重新执行的时候会接着这个地方执行
+
+
+#设置redis的连接的信息
+REDIS_HOST='127.0.0.1'   #redis服务器的ip
+REDIS_PORT=6379   #端口
+
+
+
+然后运行爬虫： 在爬虫服务器中进入到爬虫文件所在的目录下，然后使用命令scrapy runspider xxx.py  ,xxx.py是你的爬虫文件的名字
+在redis服务器中，推入一个开始的url链接进入到爬虫文件中的那个redis_key：redis-cli> lpush [redis_key] start_url 开始爬取
+
+
+
+
+
+----------------------------------------------
+该视频到此完结：视频地址：https://www.bilibili.com/video/av57909837
+
+
+
+
+
+
+
+
+
+

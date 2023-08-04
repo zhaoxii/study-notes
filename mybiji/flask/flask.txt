@@ -1,0 +1,2017 @@
+flask路由
+app.route装饰器底层是add_url_rule，也可以自己将函数传入add_url_rule，并指定路由
+
+@app.route("/index")  
+路由还可以包含<int:x>,<page:p>,<uuid:uid>等类型，默认<a>不指定类型时是str类型
+然后视图函数中，返回的值可以是str，dict，元组，Response对象(导入Response类)
+返回元组时，不是常规意义上的元组，
+
+
+
+
+请求与响应都遵循http协议
+
+request
+包含请求头，请求行，请求体
+
+
+response
+包含响应头，响应行，响应体
+
+
+
+flask的response对象
+可以通过make_response模块定义响应头
+例：
+content="<h1>aaa</h1>"
+response=make_response(content)
+response.headers['mytest']='abc'
+return response
+
+response("字符串",headers={key:value})也可
+
+flask的request对象
+通过导入request对象访问
+
+
+
+flask中使用html模板
+通过render_template方法导入templates文件夹下的html
+render_template利用模板引擎(jinjia2)找到模板文件夹中的html，
+
+
+
+
+flask拿到form表单提交的值（get请求）request.args，如果app.route中不指定post请求，则默认没有post请求
+
+如果是post请求，则用request.form取值
+
+
+
+
+
+
+
+
+flask重定向
+redirect模块
+结合
+url_for() 与 endpoint 使用  ，如果没有endpoint。则参数为函数名
+（反向解析，给你个小名，找到路径）
+
+redirect(url_for(endpoint=""))
+
+
+
+
+
+flask模板(templates)部分
+往html中传入数据，在render_template中参数传入 render_template("xx.html",key1=value1,key2=value2)
+如果没有找到对应的值，则为空白字符串
+
+可以传入列表,元组，字典，对象
+
+
+模板中要遵循模板语法
+语法：
+1、获取变量值{{ 变量名 }}
+2、可以通过下标的形式获取列表的元素，也可以用点(.) {{ list.0 }}
+3、字典可以通过点(.)键来获取值，用get方法也可以根据键获取值{{ dict.key }} {{ dict.get(key) }}  
+4、对象也是用.访问
+
+5、 控制块
+	{% if 条件 %} {% else %} {% endif %}  可以写在html标签中判断
+	{% for 变量名 in 可迭代的对象 %}  循环体  {% endfor %}  for循环体内有个loop变量， loop.index, loop.index0表示序号   loop.revindex序号是倒着的
+
+
+
+
+flask过滤器
+过滤器本质就是函数
+模板语法中过滤器的使用：
+{{ 变量名 | 过滤器的名字 }} 也可以传参{{ 变量名 | 过滤器的名字(*args) }}
+
+常见的过滤器：
+safe 禁用转译
+capitalize 单词的首字母大写
+lower upper 小写大写转换
+title 一句话中的每个单词的首字母大写
+reverse 反转
+format 格式化输出
+truncate 字符串截断
+
+列表的过滤器的使用
+first
+last
+length
+sum  整型的计算
+sort
+
+字典的过滤器操作
+keys()
+values()
+items()
+
+
+自定义过滤器
+1、通过flask的add_template_filter方法，如果重名的话会替换系统的    
+2、通过装饰器
+①
+def replace_hello(val):
+    va=val.replace("hello",'')
+    return va
+
+app.add_template_filter(replace_hello,"replace_hello")  # replace_hello过滤器的名字
+②
+@app.template_filter("listreverse")   listreverse是过滤器的名字
+def reverse_list(li):
+    temp_li=li.reverse()
+    return temp_li
+
+
+
+模板：复用
+模板继承
+include
+宏
+
+需要模板继承的情况：
+1、多个模板具有完全相同的顶部和底部
+2、多个模板具有完全相同的模板内容，但是内容中部分不一样
+3、多个模板具有完全相同的模板内容，但是内容中部分不一样
+要用{% block 名字 %}  {% endblock %}在父模板中挖坑，先定义父模板(一般定义为base.html)
+用{% extends 父模板 %}在子模版中继承，然后用{% block 名字 %}  {% endblock %}找到父模板中的坑，再去填充
+
+父模板：
+1、定义一个base.html
+2、分析模板中哪些是变化的。对变化的部分用block进行预留位置
+3、注意：样式和脚本 需要提前预留
+
+子使用父模板：
+1、用extends继承
+2、根据名字找到对应的block，进行填充
+
+
+
+
+include：包含，当A,B,C页面都有共同的部分，但是其他页面没有这部分，这时候考虑使用include（include相当于把所有的内容全部导入过来）
+步骤：
+1、先定义一个公共的模板部分，xxx.html
+2、谁使用include过来。{% include "文件夹/xxx.html" %}
+
+
+宏：macro(可以看成一个函数)
+1、把它看作jinjia2的一个函数，这个函数可以返回一个html的一个字符串
+2、 目的：达到代码复用
+定义宏：{% macro form(action,value='登录') %}  {% endmacro %}
+导入宏：{% import 'xx.html' as f %} {{ f.宏名字(参数) }}
+
+
+
+
+总结：
+在{{}} 中的是变量
+在{%%}中的是块，到现在为止，用了if，for，block，macro，if, include,import,extends
+加载静态文件时，可以用{{ url_for('static',filenama='') }}
+
+
+
+
+
+flask蓝图：（看代码flasktwo）
+user_bp=Blueprint("user",__name__)
+app.register_blueprint(user_bp)  # 绑定蓝图对象 到app
+
+# 使用蓝图去使用url_for时， 参数要用蓝图名.路由名
+
+
+
+
+
+flask-script库
+
+套壳，使用Manager进行命令的管理和使用
+manager=Manager(app=app)
+manager.run()
+
+使用命令行启动服务 python app.py runserver  通过python app.py runserver --help查看对于runserver的命令帮助
+
+也可以自己定义命令
+@manager.command
+def hello():
+    print("hello world")
+然后在命令行中执行 python app.py hello 时，就会执行hello函数
+
+
+
+
+flask--数据库
+pymysql
+
+ORM映射
+类      对应      表
+属性              字段
+对象			一条数据
+
+一个是sqlalchemy库
+一个是flask-sqlalchemy库
+sqlalchemy库是ORM工具
+flask-sqlalchemy库是基于sqlalchemy的，做了提升，使我们开发更加方便
+
+所以用pymysql链接数据库，然后用flask-sqlalchemy做映射
+
+还要用flask-migrate库，实现用命令操作
+
+
+flask-sqlalchemy配置
+#  配置规则： 数据库+pymysql：//数据库用户名:密码@主机：端口/数据库名
+SQLALCHEMY_DATABASE_URI='mysql+pymysql://root:123456@localhost:3306/flaskone'
+
+
+flask app关联sqlalchemy，
+db=SQLAlchemy()   
+db.init_app(app)  
+(要创建一个包ext，然后在这个包中的__init__中进行创建db)  ,app关联sqlalchemy时，也可以直接在创建db时进行传入参数
+
+
+
+flask-migrate库既要跟app关联去影响app，   migrate=Migrate(app=app,db=db)
+也要跟manager关联去使用命令去操作  	      manager.add_command("db",MigrateCommand)
+
+
+model.py     表明默认是类名的小写 ，如果想指定表名，加__tablename__='表名'
+class User(db.Model):
+    #  db.column(类型，约束)
+    id=db.Column(db.Integer,primary_key=True,autoincrement=True)
+    username=db.Column(db.String(15),nullable=False)
+    password=db.Column(db.String(12),nullable=False)
+    phone=db.Column(db.String(11),unique=True)
+    rdatetime=db.Column(db.DateTime,default=datetime.now)
+
+    def __str__(self):
+        return self.username
+
+继承db.Model
+
+创完类用命令迁移。 ***************************但是要先在app.py中导入模型 from apps.user.model import User   *************************************
+然后用终端命令：python app.py db init  会产生一个文件夹migrations。一个项目只需要init一次
+然后用python app.py db migrate 在migrations下的version下产生一个py文件
+然后执行python app.py db migrate去往数据库创建表(相当于执行py文件的upgrade函数)
+
+
+如果对model.py添加了新类或者其他修改，只需要执行python app.py db migrate   python app.py db migrate，不用执行init
+
+每次进行migrate操作，都会在version文件夹下产生一个版本文件
+
+然后迁移的数据库中会产生一个alembic_version表，这个表记录了最后一次migrate的版本号，方便去进行降级操作(downgrade)，降到前一级
+
+
+往数据库里插入
+@user_bp.route('/register',methods=['GET','POST'])
+def register():
+    if request.method=='POST':
+        username=request.form.get("username")
+        password=request.form.get("password")
+        phone=request.form.get("phone")
+        repassword=request.form.get("repassword")
+        if repassword==password:
+            #  往数据库里插入
+            # 1、找到模型类并创建对象。2、给对象属性赋值。3、把对象添加到session(类似于缓存)。4、提交数据
+            user=User()
+            user.username=username
+            user.password=password
+            user.phone=phone
+            db.session.add(user)
+            db.session.commit()
+            return "用户注册成功"
+        else:
+            return "密码不一致"
+
+
+    return render_template("user/register.html")
+
+
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+数据库查询：
+查询所有：模型类.query.all()  # 类似于 select * from user  返回用户对象
+
+user=User.query.get(2)  # 根据主键查询用户,参数放主键的值，返回值是一个用户对象
+
+有条件的查询：模型类.query.filter_by(字段名=值)  类似于 select * from user where username=xxx  返回多条记录
+有条件的查询：模型类.query.filter_by(字段名=值).first()  类似于 select * from user where username=xxx  返回一条记录
+
+select * from user where age>17 and gender='男'
+select * from user where username like 'zhang%'
+select * from user where rdatetime>xxx and rdatetime < xxx
+模型类.query.filter()  里面是一个布尔类型的条件  参数为：模型名.字段名==值
+模型类.query.filter_by()  里面是一个等值        参数为： 字段名=值
+***************************************模型类.query.filter()****************************************
+模型类.query.filter().all()   
+模型类.query.filter().first()
+User.query.filter(User.username.startswith("z")).all()
+User.query.filter(User.username.endswith("z")).all()
+User.query.filter(User.username.contains("z")).all()
+User.query.filter(User.username.like("%z%")).all()
+User.query.filter(or_(User.username.like("%z%"),User.username.contains("i"))).all()   # or_ 表示或者  ,多条件
+User.query.filter(and_(User.username.like("%z%"),User.rdatetime < '2022-01-13 10:13:00')).all()   # and_ 表示 并且  用 >  < >= <= not_(不等于)
+User.query.filter(not_(User.username.like("%z%"),User.rdatetime < '2022-01-13 10:13:00')).all()   not_(非)
+
+
+
+
+1、User.query.all() 查询全部    # 类似于 select * from user  返回用户对象
+@user_bp.route("/",endpoint="center")
+def user_center():
+    #  查询数据库
+    users=User.query.all()  # 类似于 select * from user  返回用户对象
+    print(users) #   [<apps.user.model.User object at 0x0000022409CF94C8>, <apps.user.model.User object at 0x0000022409CF97C8>]
+
+
+    return render_template("user/center.html",users=users)
+
+
+2、User.query.filter_by(username=username)  # select * from user where username=xxx  返回多条记录
+@user_bp.route("/login",methods=["POST","GET"])
+def login():
+    if request.method=="POST":
+        username=request.form.get("username")
+        password=request.form.get("password")
+        new_password=hashlib.sha256(password.encode("utf-8")).hexdigest()
+
+        user_list = User.query.filter_by(username=username)  # select * from user where username=xxx  返回多条记录
+        print(user_list)
+        for user in user_list:
+            # print(user)  # user表示一个用户对象
+            if user.password==new_password:
+                return "用户登录成功"
+        else:
+            return render_template("user/login.html",msg="输入有误")
+
+
+    return render_template("user/login.html")
+	
+	
+
+排序：
+User.query.order_by('rdatetime').all()  # order_by 排序
+User.query.filter(User.username.contains('z')).order_by('rdatetime').all()  # order_by 排序
+User.query.filter(User.username.contains('z')).order_by(User.id).all()  # order_by
+User.query.filter(User.username.contains('z')).order_by(-User.id).all()  # order_by 倒序   用字符穿时，前面加-不能进行倒序
+	
+限制：limit
+User.query.limit(3).all()
+User.query.offset(2).limit(2).all()  # offset表示偏移  跳过两跳记录再拿两个
+	
+	
+	
+总结：
+1、User.query.all()  所有
+2、User.query.get(主键)  一个
+3、User.query.filter_by()   # 只能加等值的条件，不像filter这么灵活
+4、User.query.filter()
+	如果要检索的字段是字符串
+	User.username.startswith('')
+	User.username.endswith('')
+	User.username.contains('')
+	User.username.like('')
+	User.username.in_(['','',''])
+	User.username == ''
+	如果要检索的是整形或者日期型
+	User.age.__lt__(18) 等价于 User.age < 18   
+	User.rdatetime.__lt__('......') 等价于 User.rdatetime < '......'  
+	User.age.__le__(18) 等价于 User.age <= 18
+	User.age.__ge__(18) 等价于 User.age >= 18
+	User.age.between(15,30)
+	__lt__  小于
+	__le__  小于等于
+	__eq__  等于
+	__ne__  不等于
+	__gt__   大于
+	__ge__   大于等于
+	多个条件一起检索 and_ or_
+	非的条件  or_
+	获取指定数量    limit()   offset()
+	排序 order_by()
+	
+	
+	
+
+数据库删除
+两种删除
+1、逻辑删除(定义数据库表的时候，添加一个字段isdelete，通过此字段控制是否删除)(相当于更新操作了)
+步骤：
+找到用户，然后将isdelete字段改为True
+
+
+2、物理删除(从数据库里删除)
+步骤：
+找到用户，然后db.session.delete(User) db.session.commit()
+
+
+
+
+数据库更新
+id=request.args.get('id')
+user=User.query.get(id)
+user.username=username
+user.phone=phone
+db.session.commit()
+只需要修改，然后提交就行了
+
+
+
+
+
+
+-------------------------------------------------------------------------------------------------------------------------------------------------
+建立表的一对多关系
+# 建立外键
+文章类中的字段：对用户id进行外键关联
+user_id =db.Column(db.Integer,db.ForeignKey('user.id'),nullable=False) # 同步到数据库的外键关系
+
+
+在用户类中的字段articles，是用来从用户对象中取文章类的信息。用relationship
+relationship()作用是主要在view和template中起作用的
+articles = db.relationship('Article', backref='user')  # 这个字段不会在数据库中体现，是用在view和template中的
+# Article是文章类的类名  backref参数是反向
+
+建立外键一定要定义relationship，relationship的作用就是实现表连接查询的
+relationship写在哪个类里都行，但是两个类中只能写一个
+
+
+例子：
+class Article(db.Model):
+    id=db.Column(db.Integer,primary_key=True,autoincrement=True)
+    title=db.Column(db.String(50),nullable=False)
+    content=db.Column(db.Text,nullable=False)
+    pdatetime=db.Column(db.DateTime,default=datetime.now)# 发布时间
+    click_num=db.Column(db.Integer,default=0)#浏览量，阅读数量
+    save_num=db.Column(db.Integer,default=0)# 收藏
+    love_num=db.Column(db.Integer,default=0) # 点赞
+    # 建立外键
+    user_id =db.Column(db.Integer,db.ForeignKey('user.id'),nullable=False)
+
+
+class User(db.Model):
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    username = db.Column(db.String(15), nullable=False)
+    password = db.Column(db.String(64), nullable=False)
+    phone = db.Column(db.String(11), nullable=False, unique=True)
+    email = db.Column(db.String(30), )
+    icon = db.Column(db.String(100))
+    isdelete = db.Column(db.Boolean, default=False)
+    rdatetime = db.Column(db.DateTime, default=datetime.now)
+
+    articles = db.relationship('Article', backref='user')  # 这个字段不会在数据库中体现，是用在view和template中的
+    # Article是文章类的类名  backref参数是反向
+    # relationship 定义的字段，不是Column定义的，不往数据库中插入，但是也可以通过对象获取
+
+    def __str__(self):
+        return self.username
+
+
+
+
+-----------------------
+多对多
+常见的多对多场景：用户对文章评论，用户对商品，学生对课程等等
+一个用户可以发表多条评论，一个文章的评论也可以多个用户来发表
+一个用户可以买多个商品，一个商品可以被多个用户购买
+
+
+多对多的实现：
+用第三张表来存放两张表的关系
+
+class User(db.Model):
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    username = db.Column(db.String(15), nullable=False)
+    password = db.Column(db.String(64), nullable=False)
+    phone = db.Column(db.String(11), nullable=False, unique=True)
+    email = db.Column(db.String(30), )
+    icon = db.Column(db.String(100))
+    isdelete = db.Column(db.Boolean, default=False)
+    rdatetime = db.Column(db.DateTime, default=datetime.now)
+
+    def __str__(self):
+        return self.username
+
+
+class Goods(db.Model):
+    id=db.Column(db.Integer,primary_key=True,autoincrement=True)
+    gname=db.Column(db.String(100),nullable=False)
+    price=db.Column(db.Float,nullable=False)
+
+
+    def __str__(self):
+        return self.gname
+
+
+#  关系表，承接user与goods的关系 在数据库中存在的表
+class User_goods(db.Model):
+    id=db.Column(db.Integer,primary_key=True,autoincrement=True)
+    user_id=db.Column(db.Integer,db.ForeignKey('user.id'))
+    goods_id=db.Column(db.Integer,db.ForeignKey("goods.id"))
+    num=db.Column(db.Integer,default=1)
+
+
+
+两张独立的表，通过第三张表进行给他俩搭上关系
+多对多的查询
+users=db.relationship("User",backref='goodslist',secondary='user_goods')  # secondary 是去第三方的表中去找 ，是表名  。 第一个参数是类名， backref是 反向查找
+
+
+
+#  建表方式2
+# tags=db.Table(
+#     'tags',  #表名
+#     db.Column("tag_id",db.Integer,db.ForeignKey("tag.id")),  # tag_id 字段名
+#     db.Column("page_id",db.Integer,db.ForeignKey("page.id"))
+# )
+
+
+
+
+
+
+---------------------------------------------------------------
+pip install flask-bootstrap
+pip install bootstrap-flask
+两个模板库类似
+https://zhuanlan.zhihu.com/p/39799223
+
+进行配置：与sqlalchemy库类似
+
+bootstrap=Bootstrap()
+bootstrap.init_app(app)
+
+然后使用：(内置的block)
+在自己的base.html中继承 {% extends "bootstrap/base.html" %}
+
+
+
+蓝图Blueprint的参数url_prefix 以 / 开头， 表示给这个蓝图添加一个路径，以后访问该蓝图定义的路径时，要添加url_prefix中定义的路径 
+
+
+
+
+-------------------项目开始--------------------------
+flaskblog项目
+密码加密：generate_password_hash 使用自带的函数加密，在登录时也有专门的方法进行对比。用check_password_hash(user.password,password)检查  第一个参数是数据库中加密的，第二个是登录时接收过来的
+密码加密时：注意创建数据库时的密码字段的长度
+flask改model字段的长度时，再进行迁移时不会发生改变，需要自己在model中改的同时，再把数据库中的长度手动进行更改
+
+
+
+
+
+注册时用ajax发请求去验证手机号是否可以使用(在register.html中)
+
+
+
+
+
+会话机制： 记录状态
+http协议：无状态协议。不会记录你的状态
+
+
+cookie
+服务端将cookie设置在响应头里  ，用response对象设置。（redirect，render_template,Response,make_response,jsonify 都能获取一个response对象）
+然后会留在浏览器上
+以key-value的形式存储
+然后访问该网站其他网页时，获取cookie，通过request对象获取
+删除cookie也是通过response对象删除
+
+设置cookie ：  response.set_cookie('uid',str(user.id),max_age=1800)  # max_age参数是 cookie的有效期, 以秒计算 ，默认是 尽可能长
+@user_bp.route('/login', methods=['POST', 'GET'])
+def login():
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
+        users = User.query.filter(User.username == username).all()   # username 通常 做成 唯一的
+        for user in users:
+            flag=check_password_hash(user.password,password)
+            if flag:
+                response=redirect(url_for('user.index'))
+                response.set_cookie('uid',str(user.id),max_age=1800)  # max_age参数是 cookie的有效期, 以秒计算 ，默认是 尽可能长
+                return response
+        else:
+            return render_template('user/login.html',msg='用户名或者密码有误')
+
+
+    return render_template('user/login.html')
+
+
+获取cookie：uid=request.cookies.get('uid',None)  # 找到则返回uid，否则返回None
+@user_bp.route('/')
+def index():
+    uid=request.cookies.get('uid',None)  # 找到则返回uid，否则返回None
+    print(uid)
+    if uid:    # 如果有这个cookie则 代表登录成功
+        user=User.query.get(uid)
+        return render_template('user/index.html',user=user)
+    return render_template('user/index.html')
+
+删除cookie：  response.delete_cookie('uid')  # 删除cookie
+@user_bp.route('logout')
+def logout():
+    response=redirect(url_for('user.index'))
+    response.delete_cookie('uid')  # 删除cookie
+
+    return response
+
+
+
+
+
+session 一个字典
+基于cookie的
+服务器端进行用户信息的保存
+
+在config中配置SECRET_KEY，随便给一个值，用于加密的。
+SECRET_KEY='ASDFAAGFAFDS'
+
+
+设置session    from flask import session    session['uid']=user.id
+# 用户登录
+@user_bp.route('/login', methods=['POST', 'GET'])
+def login():
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
+        users = User.query.filter(User.username == username).all()   # username 通常 做成 唯一的
+        for user in users:
+            flag=check_password_hash(user.password,password)
+            if flag:
+                # cookie实现
+                # response=redirect(url_for('user.index'))
+                # response.set_cookie('uid',str(user.id),max_age=1800)  # max_age参数是 cookie的有效期, 以秒计算 ，默认是 尽可能长
+                # return response
+                # session机制  from flask import session    session当成字典使用
+                session['uid']=user.id
+                return redirect(url_for('user.index'))
+
+        else:
+            return render_template('user/login.html',msg='用户名或者密码有误')
+
+
+    return render_template('user/login.html')
+
+
+
+获取session
+@user_bp.route('/')
+def index():
+    # uid=request.cookies.get('uid',None)  # 找到则返回uid，否则返回None
+    # print(uid)
+    #  session获取 字典的方式获取
+    uid=session.get('uid')
+    if uid:    # 如果有这个cookie则 代表登录成功
+        user=User.query.get(uid)
+        return render_template('user/index.html',user=user)
+    return render_template('user/index.html')
+
+
+删除session
+
+@user_bp.route('logout')
+def logout():
+    # response=redirect(url_for('user.index'))
+    # response.delete_cookie('uid')  # 删除cookie
+    # return response
+    #  删除 session
+    # session.pop('uid')
+	# del session['uid']
+    session.clear()
+    return redirect(url_for('user.index'))
+
+
+
+
+cookie存储在本地浏览器，session存储在服务器
+
+
+
+问题：session与cookie的区别，为什么要用session，用cookie不行吗？
+
+
+---------------------------------
+手机验证码登录
+
+首先要发送验证码，就要使用第三方的服务(阿里，腾讯，京东，网易等)
+
+
+
+
+
+----------------------------------
+登陆权限的验证
+验证你是否登录是登录状态，然后如果登录了，才可以进行一些页面的访问和别的操作。(比如用户中心)
+如果没有登录，那访问一些页面时不能进行显示，直接跳转到登录页面
+
+flask的钩子函数
+中途拦截了请求。 
+
+
+直接应用在app上
+before_first_request   
+before_request         
+after_request            
+teardown_request
+
+
+应用到蓝图：   (跟直接应用在app上的钩子名字对比，多了一个app)  ，对所有蓝图都有效，访问所有蓝图路径时都会走这个钩子函数
+before_app_first_request     第一次请求的时候执行
+before_app_request    **重点**       每一次请求都会执行(任何请求都会执行，包括ajax)，在视图函数之前执行
+after_app_request         处理完了视图函数往回走的时候，要接视图函数的response作为参数
+teardown_app_request      在after_app_request之后
+
+通过before_app_request实现权限验证
+
+
+
+g对象
+g是一个对象，本次请求的一个对象，往这个对象里放入一个属性user
+g 只存在于这次请求中，下次请求就没了。但是g存在于这次请求的整个过程中，包括在模板中也可使用
+
+
+
+加载头像
+<img src="{{ url_for('static',filename='images/touxiang.jpg') }}" alt="" width="90" height="100">
+
+
+
+
+文件上传  
+photo=request.files.get('icon')     photo是FileStorage类型   一个属性  photo.filename  一个方法 photo.save() 参数是保存路径  photo.read()  将上传的内容转为二进制读取出来
+
+
+为啥我用os.path.join
+拼接路径是upload/icon\xxx.jpg，但是视频中是 upload/icon/xxx.jpg
+然后在模板中用url_for显示图片的时候 \ 就成了%5C，然后图片就显示不出来了
+ALLOWED_EXTENSIONS = ['jpg','png','gif','bmp']  # 上传 图片的扩展名
+# 用户信息修改
+@user_bp.route('/change', methods=['GET', 'POST'])
+def user_change():
+    if request.method == 'POST':
+        username = request.form.get('username')
+        phone = request.form.get('phone')
+        email = request.form.get('email')
+        icon = request.files.get('icon')  # 获取文件或者图片上传的.  不局限于图片
+        # print(icon)  # <FileStorage: 'gvt2tldntnj30u00u0ae8.jpg' ('image/jpeg')>
+        # FileStorage 属性：    filename 文件名   方法：save() 参数传一个保存路径
+        icon_name = icon.filename
+        suffix = icon_name.rsplit('.')[-1]  # 后缀
+        if suffix in ALLOWED_EXTENSIONS:
+            #  secure_filename 将文件名 转为一个安全的文件名。保证文件名是符合python的规则的
+            #  比如上传的文件名中有一些空格，一些其他字符。需要转换文件名
+            icon_name = secure_filename(icon_name)
+            file_path= os.path.join(DevelopmentConfig.UPLOAD_ICON_DIR,icon_name)
+            icon.save(file_path)  # 文件保存成功
+            user = g.user
+            user.username = username
+            user.phone = phone
+            user.email = email
+            # path=os.path.join('upload/icon',icon_name)  #
+            # 用这种方式拼接路径保存在数据库中  是 upload/icon\xx.jpg，
+            #   然后在模板中显示图片的时候，路径加载错误    \变成了%5C ，就显示不出来，所以我改成了下面的方式拼接路径
+            path='upload/icon/'+icon_name
+            user.icon=path
+            db.session.commit()
+            return redirect(url_for('user.user_center'))
+
+        else:
+            return render_template('user/center.html', user=g.user,msg='必须是扩展名是：jpg,png,gif,bmp格式')
+
+        # users=User.query.all()
+        # for user in users:
+        #     if user.phone==phone:
+        #         # 说明数据库中有该号码
+        #         return render_template('user/center.html', user=g.user,msg='此号码已被注册')
+
+
+    return render_template('user/center.html', user=g.user)
+
+
+
+
+
+富文本
+tinymce
+http://tinymce.ax-z.cn/
+1、下载
+2、引入
+3、初始化
+
+
+
+
+
+
+分页
+page=int(request.args.get('page',1))  # 接收页码数 收不到默认是1
+
+pagination=Article.query.order_by(-Article.pdatetime).paginate(page=page,per_page=3)
+print(pagination.items)  # [<apps.artical.model.Article object at 0x0000027505344C88>, <apps.artical.model.Article object at 0x000002750534D1C8>, <apps.artical.model.Article object at 0x000002750534D248>]
+print(pagination.page)    # 当前页码数
+print(pagination.prev_num)  # 当前页的前一个页码数
+print(pagination.next_num)  #  当前页的后一页的页码数
+print(pagination.has_next)   # 当前页是否有下一页
+print(pagination.has_prev)   # 当前页 是否有上一页
+print(pagination.pages)      #  总页数
+print(pagination.total)      #  数据库中总条数
+
+
+
+
+
+
+点赞，收藏
+
+
+
+
+
+
+七牛云  注册：15617135287 密码Crooked187563!
+第三方存储，可将相册图片上传至云存储。
+https://developer.qiniu.com/kodo/1242/python    #  开发手册
+https://portal.qiniu.com/kodo/bucket        
+
+上传代码：
+import os
+from qiniu import Auth, put_file, etag
+import qiniu.config
+
+#需要填写你的 Access Key 和 Secret Key
+from config import Config
+
+access_key = 'G7iR1derRI3Q1b35wz9IUoyD-hf0qRtfPm68hNoP'
+secret_key = 'xSpKtqyGXlE10EB27vbA6zmZW-JYXY5_IE1bVa_i'
+
+#构建鉴权对象
+q = Auth(access_key, secret_key)
+
+#要上传的空间
+bucket_name = 'myyyyyflaskblog'
+
+#上传后保存的文件名
+key = 'my-python-logo.png'
+
+#生成上传 Token，可以指定过期时间等
+token = q.upload_token(bucket_name, key, 3600)
+
+#要上传文件的本地路径
+localfile = os.path.join(Config.UPLOAD_ICON_DIR,'QQ20211005154310.png')
+
+ret, info = put_file(token, key, localfile, version='v2')
+print(info)
+print(ret)
+
+
+当需要去访问云存储上面的图片时，需要将空间设置为公开的。这样会有一个外链，然后可以根据外链去进行访问
+
+
+
+
+
+
+
+
+建立相册模型
+
+
+
+
+
+
+相册云端上传，访问，删除(为什么用云端存储，因为本地空间有限)
+
+<form action="{{ url_for('user.upload_photo') }}" method="post" enctype="multipart/form-data" class="form-inline">
+	<input type="file" name="photo" class="form-control">
+	<input type="submit" value="上传相册" class="btn btn-default">
+</form>
+
+上传文件时：enctype="multipart/form-data" 必须加
+
+https://developer.qiniu.com/kodo/1242/python    #  七牛云开发手册
+
+上传 ，删除(util.py中)
+根据开发手册的例子可知道怎样去上传和删除
+def upload_qiniu(filestorage):
+    access_key = 'G7iR1derRI3Q1b35wz9IUoyD-hf0qRtfPm68hNoP'
+    secret_key = 'xSpKtqyGXlE10EB27vbA6zmZW-JYXY5_IE1bVa_i'
+
+    # 构建鉴权对象
+    q = Auth(access_key, secret_key)
+
+    # 要上传的空间
+    bucket_name = 'mmmmmmyyblog'
+
+    # 上传后保存的文件名
+    filename = filestorage.filename
+    rand=random.randint(1,1000)
+    suffix=filename.rsplit('.')[-1]
+    key = filename.rsplit('.')[0] + '_' + str(rand) + '.' + suffix   # 文件名
+
+    # 生成上传 Token，可以指定过期时间等
+    token = q.upload_token(bucket_name, key, 3600)
+
+    # 要上传文件的本地路径
+    # localfile = ''
+    # ret, info = put_file(token, key, localfile, version='v2')   # put_file适用于给出  上传文件的路径 
+    ret,info=put_data(token,key,filestorage.read())   # filestorage.read() 将图片以 二进制读出来   put_data适用于从filestorage里面读取二进制实现上传
+    return ret,info
+
+
+
+def del_qiniu(filename):
+    access_key = 'G7iR1derRI3Q1b35wz9IUoyD-hf0qRtfPm68hNoP'
+    secret_key = 'xSpKtqyGXlE10EB27vbA6zmZW-JYXY5_IE1bVa_i'
+
+    # 构建鉴权对象
+    q = Auth(access_key, secret_key)
+
+    #初始化BucketManager
+    bucket = BucketManager(q)
+
+    #你要测试的空间， 并且这个key在你空间中存在
+    bucket_name = 'mmmmmmyyblog'
+    key = filename   # 图片名
+
+    #删除bucket_name 中的文件 key
+    ret, info = bucket.delete(bucket_name, key)
+    return info
+
+
+
+访问，根据https://portal.qiniu.com/kodo/bucket/resource-v2?bucketName=mmmmmmyyblog 图片后面的更多选项，然后复制外链，  可看到可以   用域名加图片名去访问
+{% for photo in photos.items %}
+	<div id="photo">
+		<img src="http://r693uktkp.hn-bkt.clouddn.com/{{ photo.photo_name }}" alt="">
+	</div>
+{% endfor %}
+
+
+
+
+
+
+
+
+
+
+评论
+进入文章详情页，必须携带aid,aid是文章的id, 用aid得到文章对象
+
+
+
+
+
+关于我模块
+注意数据库中一对多的关系，用一查多时，返回的是一个列表，而不是对象。 用多查一时，返回的是一个对象
+
+
+
+
+留言板模块
+
+
+
+
+
+文章分类模块
+
+
+
+----------------项目结束------------------------
+
+
+
+----------------------------------------------------
+百度领了一个服务器  密码crooked187563!
+https://cloud.baidu.com/
+
+安装python3
+https://www.cnblogs.com/lemon-feng/p/11208435.html
+
+
+
+安装mysql：https://www.cnblogs.com/linglei/p/14519416.html
+2022-01-30T13:45:53.924523Z 1 [Note] A temporary password is generated for root@localhost: 9N<qY=yumaUp
+password：123465
+
+
+
+安装redis
+https://www.cnblogs.com/hunanzp/p/12304622.html
+
+
+
+
+pycharm远程连接服务器的python环境
+项目同时也会自动上传到服务器中，
+
+
+
+
+
+部署项目
+使用navicat将本地的数据库的表和数据同步到服务器。
+
+
+
+
+nginx，uwsgi
+nginx是一个高性能的HTTP和反向代理服务器，也是一个IMAP/POP3/SMTP服务器
+nginx是一个轻量级的web服务器、反向代理服务器以及电子邮件代理服务器，
+
+特点是占用内存少，并发能力强，支持高并发，高度模块化，反向代理，负载均衡
+
+nginx因其稳定性，丰富的功能，示例配置文件和低系统资源的消耗而闻名
+
+正向代理
+反向代理
+
+
+epoll原理
+
+
+
+https://nginx.org/
+https://nginx.org/en/linux_packages.html#RHEL-CentOS
+https://www.nginx.cn/doc/index.html
+
+
+---------------------------------
+安装nginx
+
+---------------------------------
+启动nginx
+1、直接 nginx
+2、 nginx -c 自己的配置文件路径(/mydata/myprojects/2048/nginx2.conf)
+
+
+---------------------------------
+配置nginx
+nginx.conf 配置文件 ,可自己写nginx.conf文件
+核心： nginx.conf 中 的http中 的server中的location配置
+
+以下是nginx.conf文件的几个配置模块
+main		全局设置
+events{		工作模式，连接配置
+	...
+}
+http{		http的配置s
+	...
+	upstream xxx{	负载均衡配置
+		...
+	}
+	server{		主机设置
+		...
+		
+		root ....
+		
+		location xxx{	URL匹配
+			...
+		}
+	}
+}
+
+
+
+
+
+---------------------------------
+退出nginx
+nginx -s stop  快速的关闭
+nginx -s quit  优雅的关闭
+nginx -s reload   重新加载配置
+
+
+
+----------------------------
+区分uwsgi，wsgi，uWSGI，nginx的区别
+
+pip install uwsgi
+
+在项目根目录创建并配置uwsgi.ini文件：
+[uwsgi]
+# 使用nginx连接时，使用
+#socket=0.0.0.0:8080
+
+# 不用nginx时，直接作为web服务器使用
+http=0.0.0.0:8080
+#配置工程项目
+chdir=/mydata/myprojects/flaskblog
+
+#配置项目的wsgi的目录，相对于工程目录，用于django
+#wsgi-file=...
+
+# 用于flask的配置
+wsgi-file =app.py
+callable = app
+
+
+#配置进程，线程信息
+processes=4  
+threads=10  
+enable-threads=True 
+master=True 
+pidfile=uwsgi.pid 
+daemonize=uwsgi.log 
+
+
+
+启动uwsgi服务器
+uwsgi --ini   /mydata/myprojects/flaskblog/uwsgi.ini  
+遇到bug，参考下面
+https://blog.csdn.net/huolan__34/article/details/86477922
+https://blog.csdn.net/qq_37928340/article/details/79800072
+
+使用uwsgi服务器访问时，把nginx服务先关了
+
+
+停止：
+uwsgi --stop uwsgi.pid
+
+
+
+
+nginx,uwsgi对接，动静分离部署，动静分离就是从nginx中访问静态文件时，不经过uwsgi，加快了访问速度
+在nginx.conf中http->server中配置
+
+root /mydata/myprojects/flaskblog;
+location /static {      # 静态文件访问位置
+
+	alias  /mydata/myprojects/flaskblog/static;   # # alias 别名，定义location的其他名字，在文件系统中能够找到
+
+}
+
+location / {           # 动，即nginx与uwsgi对接
+	include /etc/nginx/uwsgi_params         # 使用该文件uwsgi_params，使得nginx与uwsgi对接
+    uwsgi_pass  localhost:8080;
+
+}
+
+然后配置uwsgi.ini中的socket
+
+nginx.conf  server的配置
+server {
+    listen       80;
+    server_name  localhost;
+
+    #access_log  /var/log/nginx/host.access.log  main;
+
+    root /mydata/myprojects/flaskblog;
+
+    location /static {
+        alias  /mydata/myprojects/flaskblog/static;
+    }
+
+    location / {
+        include   /etc/nginx/uwsgi_params;
+        uwsgi_pass  localhost:8080;
+    }
+
+    #error_page  404              /404.html;
+
+    # redirect server error pages to the static page /50x.html
+    #
+    error_page   500 502 503 504  /50x.html;
+    location = /50x.html {
+        root   /usr/share/nginx/html;
+    }
+
+  }
+
+
+
+
+--------------------------------
+nginx.conf 与 uwsgi.ini 完整配置
+
+user  root;
+worker_processes  auto;
+
+error_log  /var/log/nginx/error.log notice;
+pid        /var/run/nginx.pid;
+
+
+events {
+    worker_connections  1024;
+}
+
+
+http {
+    include       /etc/nginx/mime.types;
+    default_type  application/octet-stream;
+
+    log_format  main  '$remote_addr - $remote_user [$time_local] "$request" '
+                      '$status $body_bytes_sent "$http_referer" '
+                      '"$http_user_agent" "$http_x_forwarded_for"';
+
+    access_log  /var/log/nginx/access.log  main;
+
+    sendfile        on;
+    #tcp_nopush     on;
+
+    keepalive_timeout  65;
+
+    #gzip  on;
+
+    server {
+    listen       80;
+    server_name  localhost;
+
+    #access_log  /var/log/nginx/host.access.log  main;
+    
+    root /mydata/myprojects/flaskblog;
+    
+    location /static {
+        alias  /mydata/myprojects/flaskblog/static;
+    }
+
+    location / {
+        include   /etc/nginx/uwsgi_params;
+        uwsgi_pass  localhost:8080;
+    }
+
+    #error_page  404              /404.html;
+
+    # redirect server error pages to the static page /50x.html
+    #
+    error_page   500 502 503 504  /50x.html;
+    location = /50x.html {
+        root   /usr/share/nginx/html;
+    }
+
+  }
+
+}
+
+
+[uwsgi]
+# 使用nginx连接时，使用
+socket=0.0.0.0:8080
+
+# 直接作为web服务器使用
+#http=0.0.0.0:8080
+#配置工程项目
+chdir=/mydata/myprojects/flaskblog
+
+#配置项目的wsgi的目录，相对于工程目录
+#wsgi-file=...
+
+# 用于flask的配置
+wsgi-file =app.py
+#router
+callable = app
+
+#配置进程，线程信息
+processes=4
+threads=10
+enable-threads=True
+master=True
+pidfile=uwsgi.pid
+daemonize=uwsgi.log
+
+
+
+
+
+
+
+-----------------------
+手机验证码存在redis中，设置过期时间,用做缓存	
+
+
+
+pip install redis
+pip install flask-caching
+
+
+
+配置缓存
+
+cache=Cache()
+
+
+cache_config={
+    'CACHE_TYPE':'redis',
+    'CACHE_REDIS_HOST':'127.0.0.1',
+    'CACHE_REDIS_PORT':6379
+}
+
+cache.init_app(app=app,config=cache_config)
+
+1、缓存键值对
+	设置
+	cache.set(key,value,timeout=second)
+	cache.set_many([(key,value),(key,value)])
+	获取：
+	cache.get(key)
+	cache.get_many(key1,key2,...)
+	删除：
+	cache.delete(key)
+	cache.delete_many(key1,key2...)
+	cache.clear()
+	
+	
+	
+	
+2、视图函数的缓存
+对首页index加缓存
+添加time.sleep(5)模拟首页内容较多，加载慢
+然后使用cache进行缓存
+在视图函数上加@cache.cached(timeout=50)
+
+
+
+
+
+
+
+
+
+redis使用
+
+
+
+
+
+
+-------------------------
+wtform    flask-wtf
+flask-wtf 集成了wtform，csrf的保护和文件上传功能，图形验证码
+
+安装
+pip install Flask-WTF
+
+
+使用
+1、创建form.py，继承FlaskForm类
+class UserForm(FlaskForm):
+    name = StringField(label='用户名', validators=[DataRequired(),Length(min=6,max=12,message='长度在min-max之间')])
+    # 	validators参数是对输入的数据进行校验   ,DataRequired 表示数据不为空，
+
+    password=PasswordField(label='密码',validators=[DataRequired(),Length(min=6,max=12,message='长度在min-max之间')])
+    confirm_password=PasswordField(label='确认密码',
+                                   validators=[DataRequired(),
+                                            Length(min=6,max=12,message='密码长度在min，max之间'),
+                                            EqualTo('password','两次密码不一致'),])   # 与password 保持一致
+
+    phone=StringField(label='手机号',validators=[DataRequired(),Length(min=11,max=11,message='手机号码11位长度')])
+
+
+    def validate_name(self,data):
+        print('----------->',self.name)
+        print('===========>',data)
+        if self.name.data[0].isdigit():
+            raise ValidationError('用户名不能以数字开头')
+
+    def validate_phone(self,data):
+        phone=data.data
+        if not re.search(r'^1[35678]\d{9}$',phone):
+            raise ValidationError("手机号码格式错误")
+
+validators参数是对输入的数据进行校验，
+可以自己定义校验方式。
+在类中写validate_表单名(self,data)这个函数去定义
+validate_name验证了name
+
+
+form中可定义的field类型：
+StringField
+PasswordField
+IntegerField
+DecimalField
+FloatField
+BooleanField
+RadioField
+SelectField
+DatetimeField
+...
+
+各种验证：
+DataRequired
+EqualTo
+Length
+IPAddress
+NumberRange
+URL
+Email
+Regexp
+...
+
+
+
+
+
+涉及到表单，就需要与csrf接触
+
+csrf
+是一种网站攻击方式
+
+<form method="post" action="">
+    {{ uform.csrf_token }}
+    <p>{{ uform.name }}</p>
+    <p>{{ uform.password }}</p>
+    <p><input type="submit" value="提交"></p>
+</form>
+
+所有的post提交都需要加{{ form.csrf_token }}
+如果表单使用了FlaskForm,则用上面加csrf_token的写法即可
+如果没用FlaskForm,则<form><input type='hidden' name='csrf_token' value="{{ csrf_token()}}"></form>
+
+csrf=CSRFProtect(app=app)
+需要配置SECRET_KEY
+app.config['SECRET_KEY']=''
+全局使用csrf保护
+
+
+
+view.py
+@app.route('/',methods=["POST",'GET'])
+def hello_world():  # put application's code here
+
+    uform=UserForm()
+    if uform.validate_on_submit():    # 主要通过uform.validate_on_submit() 对输入的内容验证
+        print(uform.name)
+        print(uform.password)
+        return '提交成功'
+
+    return render_template('user.html',uform=uform)
+
+validate_on_submit  1、验证是否是post请求  2、验证是否符合定义的要求
+
+
+模板中：
+<form method="post" action="{{ url_for('hello_world') }}">
+    {{ uform.csrf_token }}
+    <p>{{ uform.name }} {% if uform.name.errors %}{{ uform.name.errors }}{% endif %}</p>
+    <p>{{ uform.password }} {% if uform.password.errors %}{{ uform.password.errors }}{% endif %}</p>
+    <p><input type="submit" value="提交"></p>
+
+</form>
+
+uform.name.errors是定义表单时的message信息
+
+
+
+
+
+文件上传：
+1、定义form，用FileField
+class UserForm(FlaskForm):
+    icon=FileField(label='头像上传',validators=[FileRequired(),FileAllowed(['jpg','png','gif',],message='必须为图像文件'),])
+
+FileAllowed是指定上传文件的类型
+
+2、在视图中验证
+validate_on_submit()  注意：在模板中上传文件必须添加enctype="multipart/form-data"
+icon=uform.icon.data      #<class 'werkzeug.datastructures.FileStorage'
+filename=secure_filename(icon.filename)
+icon.save(os.path.join(UPLOAD_DIR,filename))
+
+
+
+
+
+
+验证码：
+RecaptchaField
+app.config['RECAPTCHA_PUBLIC_KEY']='AADSA'
+app.config['RECAPTCHA_PRIVATE_KEY']='QWQE'
+
+验证码加载不出来是因为RecaptchaField加载的google的js(可在网页中检查去查看)，所以需要翻墙才能查看
+
+所以使用pillow进行自己绘制
+
+recaptcha=StringField(label='验证码')
+def validate_recaptcha(self,data):
+	input_code = data.data
+	code = session.get('vaild')
+	if input_code.lower() != code.lower():
+		raise ValidationError("验证码错误")
+
+
+
+<p>{{ uform.recaptcha.label }}:{{ uform.recaptcha }} <img src="{{ url_for('load_image') }}" alt="" id="img"></p>
+<p>{% if uform.recaptcha.errors %}{{ uform.recaptcha.errors.0 }}{% endif %}</p>
+
+
+
+
+@app.route('/image')
+def load_image():
+    img,code=util.generate_image(4)
+
+    buffer=BytesIO()
+    img.save(buffer,'JPEG')
+    buf_bytes = buffer.getvalue()
+    #  将验证码放在session，最好放在redis中，因为可以设置失效时间
+    session['valid']=code
+
+
+    response = make_response(buf_bytes)
+    response.headers['Content-Type']='image/jpg'
+    return response
+
+
+
+
+
+
+
+
+
+bootstrap与form结合使用
+https://flask-bootstrap-zh.readthedocs.io/zh/latest/forms.html#
+
+
+{% extends 'bootstrap/base.html' %}
+{% import 'bootstrap/wtf.html'  as wtf %}
+
+
+
+
+{% extends 'bootstrap/base.html' %}
+{% import 'bootstrap/wtf.html'  as wtf %}
+{% block styles %}
+    {{ super() }}
+{% endblock %}
+
+{% block content %}
+
+    <form action="{{ url_for('hello_world') }}" method="post" enctype="multipart/form-data">
+
+
+
+        {{ wtf.quick_form(uform, button_map={'submit_button': 'primary'},form_type='horizontal',horizontal_columns=('lg',2,5)) }}
+
+
+    </form>
+
+{% endblock %}
+
+
+
+
+@app.route('/user',methods=["POST",'GET'])
+def boot_form_user():
+    uform=UserForm()
+
+    return  render_template('user1.html',uform=uform)
+
+
+
+
+
+所以，到此为止，flask-wtf,提供了验证的部分，csrf的保护
+
+
+
+
+
+-------------------------------------------------------------
+闪现
+flash
+flash可以将信息发送到模板上，通过get_flashed_messages()获取。要获取消息的类别，将参数with_categories设为True
+在请求结束时添加flash，
+在当前请求和下一个请求中可以获取，其他请求就获取不到了
+flash('恭喜验证成功','info')    # info,error,warning 代表消息的类别
+flash('qqqqqqqqqq','error')
+flash(username,'warning')
+
+
+
+
+app.secret_key='asdsdas'
+@app.route('/',methods=['GET','POST'])
+def hello_world():  # put application's code here
+    if request.method=="POST":
+        #     验证username是否是admin
+        username = request.form.get('username')
+        if username=='admin':
+            flash('恭喜验证成功','info')    # info,error,warning 代表消息的类别
+            flash('qqqqqqqqqq','error')
+            flash(username,'warning')
+            return render_template('index.html', )
+
+        else:
+
+            pass
+
+    return render_template('login.html', msg='err')
+
+
+if __name__ == '__main__':
+    app.run(debug=True)
+
+底层通过session实现，所以要配置app.secret_key='asdsdas'
+
+
+
+<style>
+	.info{
+		color: deepskyblue;
+	}
+	.warning{
+		color: orange;
+	}
+	.error{
+		color: red;
+	}
+
+</style>
+
+
+{% with messagges = get_flashed_messages(with_categories=True) %}   # 要获取消息的类别，将参数with_categories设为True
+    {% if messagges %}
+        <ul>
+            {% for category,messagge in messagges %}
+
+                <li class="{{ category }}">
+                    {{ messagge }}
+                </li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+{% endwith %}
+
+
+
+
+过滤闪现的消息,有针对的获取对应类型的消息
+{% with messagges = get_flashed_messages(category_filter=["error"]) %}
+
+
+
+
+
+
+------------------------------
+日志
+
+app自带的
+
+app.logger.debug('zsygdebugtest')
+app.logger.info('zsyginfotest')
+app.logger.error('zsygerrortest')
+app.logger.warning('zsygewarningtest')
+
+
+
+logging模块,两种配置方式
+1、
+logging.basicConfig(filename='log.txt',filemode='a',
+                    level=logging.WARNING,format='%(asctime)s - %(filename)s[line:%(lineno)d] - %(levelname)s: %(message)s')
+
+
+
+
+2、
+logger = logging.getLogger("name")    # 默认flask的名字叫app   logger = logging.getLogger("app") 
+logger.setLevel(level=logging.WARNING)
+handler = logging.FileHandler("log2.txt")
+handler.setLevel(logging.INFO)
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+handler.setFormatter(formatter)
+logger.addHandler(handler)
+
+
+
+
+uwsgi中uwsgi.log自动记录日志
+
+
+
+
+
+
+----------------------------------------------------------
+flask-restful
+
+pip install flask-restful
+应用在前后端分离， 不与templates打交道
+
+https://www.jianshu.com/p/75389ea9a90b
+http://www.pythondoc.com/Flask-RESTful/quickstart.html
+
+
+配置flask-restful与db类似
+
+from flask_restful import Api
+from flask_sqlalchemy import SQLAlchemy
+
+1、
+db= SQLAlchemy()
+api=Api()     # 或者api=Api(app=蓝图对象),    创建api对象
+
+def create_app():
+    app=Flask(__name__)
+    app.config.from_object(settings.DevelopmentConfig)
+
+    db.init_app(app=app)
+    api.init_app(app=app)
+    return app
+
+
+2、
+定义类试图
+from flask_restful import Resource
+
+user_fields={                     # 前面的名字要与数据库中的字段名一样
+    'id': fields.Integer,
+    'username': fields.String,
+    'password': fields.String,
+    'udatetime':fields.DateTime
+}
+
+
+
+class xxxResource(Resource):
+	def get(self)
+	def post(self)
+    def put(self)
+    def delete(self)
+
+	@marshal_with(user_fields)
+	def get(self):  # get请求的处理
+		users=User.query.all()
+		# userList=[]
+		# for user in users:
+		#     userList.append(user.__dict__)
+		return users       # 因为 users是对象类型，不是str，int，list等类型，所以需要加 @marshal_with(user_fields) 进行序列化
+
+
+
+3、
+绑定：
+api.add_resource(xxxResource,'/url')
+
+
+
+endpoint
+api.add_resource(UserResource,'/user',endpoint='all_user')
+
+
+
+---------------------------
+请求参数
+
+# 参数解析
+parser = reqparse.RequestParser(bundle_errors=True)  # 解析对象    bundle_errors=True，则会将所有的错误全都 报出来
+parser.add_argument('username', type=str, required=True, help='必须输入username', location=[
+    'form'])  # 添加参数   location=['form']限制必须是postman中，form参数或者前端的表单数据  location可以是form，cookie，headers，args
+parser.add_argument('password', type=inputs.regex(r'^\d{6,12}$'), required=True, help='必须输入6-12的int password',
+                    location=['form'])  #
+parser.add_argument('phone', type=inputs.regex(r'^1[356789]\d{9}$'), location=['form', 'args'],
+                    help='手机号码格式错误')  # 必须符合 inputs.regex(r'^1[356789]\d{9}$') 的正则
+parser.add_argument('hobby', action='append')  # 加上action='append' 可接受多个参数，以列表的形式存在
+
+# parser.add_argument('picture', type=werkzeug.datastructures.FileStorage, location='files')   # 文件上传
+parser.add_argument('icon', type=FileStorage, location='files')  # 文件上传
+        
+args = parser.parse_args()
+username = args.get('username')
+password = args.get('password')
+
+
+parser.copy()是深拷贝
+
+
+
+--------------------
+输出
+
+user_fields = {
+    'id': fields.Integer,
+    'private_name': fields.String(default='匿名',attribute='username'),    #  attribute可以将 字段改名字，给外界不展示数据库的字段名 。 如果拿不到数据，则会展示default
+    'password': fields.String,
+    'phone': fields.String,
+    'udatetime': fields.DateTime(dt_format='iso8601')
+}
+
+
+
+
+自定义fields
+继承fields.Raw,重写format方法
+
+class IsDelete(fields.Raw):
+    def format(self, value):
+        # print(value,'======================>>>')
+        return '删除了' if value else '未删除'
+
+user_fields = {
+    'id': fields.Integer,
+    'private_name': fields.String(default='匿名',attribute='username'),    # attribute是字段名 attribute可以将 字段改名字，给外界不展示数据库的字段名 。 如果拿不到数据，则会展示default
+    'password': fields.String,
+    'phone': fields.String,
+    'isDelete':fields.Boolean(attribute='isdelete'),
+    'isDelete1':IsDelete(attribute='isdelete'),
+    'udatetime': fields.DateTime(dt_format='iso8601')
+}
+
+
+fields.Url的使用
+
+xxxlist ----->点击具体的一个获取详情 ------> 详情
+
+定义两个user_fields,
+1.用于获取用户的列表信息结构的fields：
+user_fields_1 = {
+    'id': fields.Integer,
+    'username': fields.String(default='匿名'),
+    'uri': fields.Url(endpoint='single_user', absolute=True)  ----》  构建路由，参数使用的就是endpoint的值， absolute=True代表是绝对路径
+}
+
+2。具体用户信息展示的fields
+user_fields = {
+    'id': fields.Integer,
+    'username': fields.String(default='匿名'),
+    'pwd': fields.String(attribute='password'),
+    'isDelete': fields.Boolean(attribute='isdelete'),
+    'isDelete1': IsDelete(attribute='isdelete'),
+    'udatetime': fields.DateTime(dt_format='rfc822')
+}
+
+涉及endpoint的定义：
+
+api.add_resource(UserSimpleResource, '/user/<int:id>', endpoint='single_user')   # <int:id> id需要与数据库的名字一样
+
+
+
+
+
+
+----------------------------
+返回复杂结构的结果data，必须是符合json格式
+如果直接返回不能有自定义的对象User，Friend，。。。。
+如果有这种对象，需要：marchal(),marchal_with()帮助进行转换。
+marchal(对象，对象的fields格式)  # 对象的fields格式是指字典的输出格式
+marchal([对象，对象]，对象的fields格式)
+
+
+
+-------------1----------------
+marshal的使用
+https://flask-restful.readthedocs.io/en/latest/fields.html
+
+class UserFriendResource(Resource):
+
+    def get(self,id):
+        friends=Friend.query.filter(Friend.uid==id).all()
+        user=User.query.get(id)
+        friends_list=[]
+        for friend in friends:
+            u = User.query.get(friend.fid)
+            friends_list.append(u)
+
+         data={
+             'username':user.username,
+             'nums':len(friends),
+             'friends':marshal(friends_list,user_fields)
+         }
+
+        return data
+
+
+
+-------------2----------------
+fields.List    fields.Nested()
+fields.Nested(user_fields)  -----> user_fields是一个字典结构，Nested将里面的每一个对象转成user_fields这种格式  -----》[user,user,user]
+fields.List(fields.String) ----> ['aaa','bbb','bbbc']
+https://flask-restful.readthedocs.io/en/latest/fields.html
+
+
+user_friend_fields={
+    'username': fields.String,
+    'nums': fields.Integer,
+    'friends':fields.List(fields.Nested(user_fields))
+}
+
+
+class UserFriendResource(Resource):
+
+    @marshal_with(user_friend_fields)
+    def get(self,id):
+        friends=Friend.query.filter(Friend.uid==id).all()
+        user=User.query.get(id)
+        friends_list=[]
+        for friend in friends:
+            u = User.query.get(friend.fid)
+            friends_list.append(u)
+
+
+        data = {
+            'username': user.username,
+            'nums': len(friends),
+            'friends': friends_list
+        }
+
+        return data
+
+
+
+
+
+
+
+
+
+------------------------------------------------------------------------------------------
+newsapi 练手项目
+
+api使用蓝图
+news_bp=Blueprint('news',__name__)
+api=Api(news_bp)
+
+app.register_blueprint(news_bp)
+
+
+
+
+
+跨域
+跨域问题来源于JavaScript的"同源策略"，即只有 协议+主机名+端口号 (如存在)相同，则允许相互访问。也就是说JavaScript只能访问和操作自己域下的资源，不能访问和操作其他域下的资源。
+跨域问题是针对JS和ajax的，html本身没有跨域问题
+
+当一个请求url的协议、域名、端口三者之间任意一个与当前页面url不同即为跨域
+请注意：localhost和127.0.0.1虽然都指向本机，但也属于跨域。
+
+
+
+
+跨域问题怎么解决？
+1、使用第三方扩展，flask-cors
+
+
+
+cors=CORS()   # 跨域处理
+cors.init_app(app=app,supports_credentials=True)  # supports_credentials是支持证书
+
+
+
+2、直接给response对象
+response=make_response()
+response.headers['Access-Control-Allow-Origin']='*'
+response.headers['Access-Control-Allow-Methods']='GET,POST'
+response.headers['Access-Control-Allow-Headers']='x-request-with'
+
+
+
+
+
+
+
+patch请求一般表示对部分数据的修改，提交的一般是一条数据的一个或几个字段值
+put请求一般表示对所有数据的修改，提交的是一条完整的数据
+post请求一般表示提交
+get请求表示获取
+
+
+
+
+
+
+
+
+token令牌
+在OAuth协议中，token是在输入了用户名和密码之后获取的，
+利用这个token你可以拥有查看或者操作相应的资源的权限。
+你有这些权限，是因为服务器知道你是谁（authentication）以后赋予你的，
+所以token这个东西，其实就是你的一个“代表”，或者说完全能代表你的“通行证”。
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,288 @@
+nginx源码编译安装
+<prefix>是安装的时候配置的安装路径(通过压缩包的源码安装)。在./configure的后面进行配置的
+<prefix>/conf/nginx.conf   配置文件目录
+<prefix>/logs/error.log    错误日志文件的目录
+<prefix>/logs/access.log   访问日志文件路径
+<prefix>/logs/nginx.pid    nginx启动后进行id的文件路径
+
+
+
+nginx -V  可查看nginx安装的一些配置，v是大写
+
+
+Kill -QUIT  pid
+kill -USR1  pid
+kill -USR2  pid
+
+
+Nginx服务启动与停止
+
+ps -ef | grep nginx 查看nginx的进程信息
+
+
+启动后，一个master进程，多个worker进程 
+
+nginx命令
+  -?,-h     查看帮助，-？与-h一样
+  -v        查看版本
+  -V        可查看nginx安装的一些配置，v是大写
+  -t        测试配置文件语法是否符合
+  -T        与小t类似，只是会把配置文件也输出
+  -q            
+  -s        stop, quit, reopen, reload 
+  -p prefix     : set prefix path (default: /usr/local/Cellar/nginx/1.21.6_1/)
+  -e filename   : set error log file (default: /usr/local/var/log/nginx/error.log)
+  -c filename   : 设置配置文件路径 (default: /usr/local/etc/nginx/nginx.conf)
+  -g directives : set global directives out of configuration file
+
+
+
+
+
+nginx版本平滑升级，在使用中(不中断服务)进行升级
+
+
+
+
+
+---------------------
+nginx配置文件nginx.conf 分为三大块：全局块，events块，http块
+http块可以配置多个server块，server块也可以配置多个location块
+
+全局配置：
+user配置: 可以指定启动运行worker进程的用户及用户组，使得访问权限更安全
+
+master_process配置：  on|off  用来指定是否生成worker_process  ，默认是on
+
+worker_processes配置：数字|auto  指定worker_process进程的数量，实现nginx并发处理服务
+
+
+daemon： 是否以守护进程的方式启动，默认是on。 守护进程就是你把终端关了，还在启动着。
+
+pid: 存放nginx的master进程启动的pid路径
+error_log   
+
+include配置:用来引入其他配置文件
+
+------------------------
+
+events块
+
+accept_mutex: 用来设置nginx网络连接序列化
+这个配置用来解决的问题是：在某个时刻，客户端发来一个请求连接，nginx后台是以多进程的工作模式，也就是有多个worker进程被同时唤醒，但是最终只有一个进程获得连接，如果每次唤醒的进程数目太多，就会影响nginx的性能，如果将该参数设置为on，将会对多个nginx进程接收连接进行序列号，一个个的唤醒接收，防止了多个进程对请求连接的争抢
+
+multi_accept: 用来设置是否允许同时接收多个网络连接
+如果multi_accept被禁止了，nginx一个工作进程只能同时接收一个新的连接，否则，一个工作进程可以同时接收所有的新连接。默认 off
+
+worker_connections： 配置单个worker进程的最大连接数
+
+use： 设置nginx服务器选择哪种事件驱动来处理网络消息.   select/poll/epoll/kqueue
+
+
+
+----------------------
+http块
+
+default_type:配置nginx响应前段请求默认的MIME类型
+
+
+access.log   记录用户所有的访问请求
+error.log     记录nginx本身运行时的错误信息，不会记录用户的访问请求
+
+Nginx服务器支持对服务日志的格式，大小，输出等进行设置，需要用到access_log和log_format指令
+
+
+
+Sendfile指令：on|off  设置nginx服务器是否使用sendfile()传输文件，该属性可大大提高nginx处理静态资源的性能
+
+keepalive_timeout： 设置长连接的超时时间。（长连接:因为http协议是一种无状态协议，客户端向服务端发送一个tcp请求，服务端响应完毕就断开连接了。
+所以如果客户端向服务端发送多个请求，每个请求都需要重新创建一次连接(tcp的三次握手，四次挥手)，效率相对来说就有所下降，然后使用keepalive模式，
+可以告诉服务端在处理完一个请求后保持这个tcp连接的打开状态，若接收到来自这个客户端的其他请求，服务端就会利用未被关闭的连接，
+而不需要重新再创建一个新的连接，提升效率。但是这个连接也不能一直保持，因为连接过多，也会使服务端的性能下降，所以可以设置其超时时间）
+
+
+keepalive_requests:  设置处理多少个请求后会断开连接
+
+
+
+
+
+server块，location块
+一个http块中可以放多个server块，一个server块中也可以放多个location块
+
+server {
+        listen       9090;
+        server_name  localhost;
+
+        #charset koi8-r;
+
+        #access_log  logs/host.access.log  main;
+
+        location / {
+            root   html;                     root资源所对应的目录
+            index  index.html index.htm;     index 访问/的时候显示的页面
+        }
+	location /get_text {
+	    default_type  text/html;
+	    return 200 "<h1>this is nginx</h1>";
+	}
+        error_page   500 502 503 504  /50x.html;   error_page后面跟的状态码，跳转到50x.html
+        location = /50x.html {
+            root   html;                       
+        }
+    }
+
+一些配置既可以在http块中配置，也可以在server块中配置，也可以在location块中配置，然后就近原则进行生效
+
+
+
+
+将nginx设置为系统服务
+在usr/lib/systemd/system/下添加nginx.service
+usr/lib/systemd/system/nginx.service
+
+设置之后可以用systemctl命令访问
+
+
+
+---------------
+
+Nginx静态资源部署
+1、静态资源的配置指令
+2、静态资源的配置优化
+3、静态资源的压缩配置指令
+4、静态资源的缓存处理
+5、静态资源的访问控制，包括跨域问题和防盗链问题
+
+------------------
+指令：
+
+listen指令
+default_server指令 
+server_name指令
+(小知识，hosts文件是一个没有扩展名的系统文件，可以用记事本打开，其作用就是将一些常用的网址域名与其对应的ip地址建立一个关联“数据库”，当用户在浏览器中输入一个需要登录的网址时，系统会首先自动从hosts文件中寻找对应的ip地址，一旦找到，系统会立即打开对应网页，如果没有找到，则系统会再将网址提交DNS域名解析服务器进行ip地址的解析)
+(linux系统hosts文件在/etc/hosts下)
+
+server_name   可精确匹配，通配符匹配，正则表达式匹配
+通配符 * ，但是不能出现在域名的中间，只能出现在首段或尾端(例如：*.zhaoxi.com, www.zhaoxi.*)
+
+正则表达式   使用~作为正则表达式字符串的开始标记，~后面不能加空格。  用括号()的时候可以用$获取匹配到的内容
+
+优先级： 精确匹配 > 通配符*在前 > 通配符*在后 > 正则表达式匹配
+
+
+location指令
+用来设置请求的uri。uri变量是是待匹配的请求字符串，可包含正则表达式，也可不包含。当nginx服务器进行搜索匹配location时，是先使用不包含正则表达式进行匹配，找到一个匹配度最高的。然后在进行包含正则表达式的进行匹配。如果能匹配到直接访问，匹配不到就使用刚才匹配度最高的那个location。
+
+Location后面可跟 =  ~  ~*  ^~   @ 几种符号，也可不跟符号
+
+不跟符号时
+location /abc{
+     default_type text/plain;
+     return 200 "ok";
+}
+
+http://localhost:port/abc
+http://localhost:port/abcde
+http://localhost:port/abc/
+http://localhost:port/abc?d=tom
+以上都能匹配到
+
+
+
+Location后跟=时，是精确匹配，不包含正则表达式
+location =/abc{
+     default_type text/plain;
+     return 200 "ok";
+}
+
+只能 http://localhost:port/abc 或者加参数可以http://localhost:port/abc?d=tom
+
+
+
+
+~用于表示当前uri中包含了正则表达式，而且区分大小写
+~*用于表示当前uri中包含了正则表达式，不区分大小写
+如果uri中用到了正则表达式，则需要用上面两个符号标识
+
+
+
+^~用于不包含正则表达式的uri前，功能与不加符号一致，唯一不同的是，如果模式匹配，就不搜索别的了
+
+
+
+root/alias 设置请求资源的目录
+
+root path : path为nginx服务器接收到请求以后查找资源的根目录路径
+alias path  
+
+Root的处理结果是root路径+location路径
+alias是使用alias路径替换location路径
+
+
+小总结：
+root的处理结果是：root路径加location路径
+Alias的处理结果是：使用alias路径替换location路径
+Alias是一个目录别名的定义，root则是最上层目录的含义
+如果location路径是以/结尾，则alias也必须是以/结尾，root没有要求
+
+
+
+
+
+index指令
+设置网站的默认首页
+index index.html/图片
+Index后面可跟多个，直到找到第一个
+
+
+
+
+
+error_page指令
+设置网站的错误页面
+语法：error_page code  【=response】 URI
+当出现对应的code后，进行处理
+
+
+
+
+
+sendfile指令
+tcp_nopush指令
+tcp_nodelay指令
+
+
+
+
+gzip对静态资源进行压缩
+ngx_http_gzip_module模块，该模块在nginx安装时候会内置在nginx的环境中，下面指令均在该模块中
+
+gzip  on/off
+gzip_types  mime类型    压缩类型
+gzip_comp_level  level(1最小，9最大)压缩程度
+gzip_vary指令   on|off  往头信息中添加压缩标识
+gzip_disable regex(正则表达式)    指定哪些浏览器不进行压缩
+gzip_http_version         指定压缩响应所需要的最低http请求版本
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,93 @@
+git init    在当前目录初始化一个本地仓库
+git add    添加到暂存区
+	git add .  添加所有的文件
+	git add 文件名   添加一个文件
+git commit  提交到仓库
+	git commit -m '描述信息，注释信息'
+git status   查看当前状态
+git log   查看提交日志
+	git log --all --pretty=oneline   查看简短的信息
+	git log --all --pretty=oneline --abbrev-commit   查看更简短的信息
+	git log --all --pretty=oneline --abbrev-commit  --graph   
+
+git reset --hard commitID   版本回退
+
+git reflog    可以看到已经删除的提交记录
+
+
+.gitignore文件，在该文件中可以指定不需要用git来管理的文件
+
+
+git branch   查看分支
+
+git branch 分支名    创建分支
+
+git checkout 分支名  切换分支
+
+git checkout -b 分支名    创建并且切换
+
+Head指向谁，谁就是当前的分支
+
+
+Git merge 分支名称   合并分支，合并之前先切换到要合并到的分支
+注意解决冲突
+
+git branch -d 分支名称  删除分支
+	    -D         强制删除
+
+
+
+配置远程仓库秘钥：
+查看本地的公钥：cat ~/.ssh/id_rsa.pub 
+
+
+git remote    查看远程仓库
+
+git remote add 远程仓库名(通常是用origin) 仓库路径(git@gitee.com:zhaoooxxxxiiii/test.git)   添加远端仓库
+
+git push 远程仓库名  本地分支名:远程分支名      将本地仓库push到远程仓库
+
+git push --set-upstream 远程仓库名 远程分支名     将本地的分支与远程的分支进行关联，后面可以直接git push
+
+
+git branch -vv  查看本地分支与远程分支的对应关系
+
+
+
+git clone  仓库路径  本地目录(可省略，会在当前目录产生一个目录)
+
+
+git fetch 远程仓库名  远程分支名    抓取
+
+git merge 远程仓库名/远程分支名      合并
+
+git pull  远程仓库名  远程分支名      拉取，相当于fetch加merge
+
+
+
+
+
+
+----------------------------------------------
+
+个人补充
+
+git show commit编号               可以查看本次提交与之前的不同
+
+
+git ls-files                      查看暂存区的内容
+
+               
+			   
+
+合并分支：
+比如a分支合并到b上，先切换到b，然后执行  git merge  a
+
+
+
+
+
+
+
+
+
