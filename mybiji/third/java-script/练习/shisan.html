@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        img {
+            width: 300px;
+        }
+    </style>
+</head>
+
+<body>
+    <button>刘德华</button>
+    <button>张学友</button>
+    <br>
+    <img src="https://tse1-mm.cn.bing.net/th/id/OIP-C.Cf95d06LX4ceQ2g4ov8IqwHaFb?pid=ImgDet&rs=1" alt="">
+    <script>
+        var button = document.querySelectorAll("button")
+        var img = document.querySelector('img')
+        for (var i = 0; i < button.length; i++) {
+            if (button[i].innerText === "刘德华") {
+                button[i].onclick = function () { img.src = "https://tse1-mm.cn.bing.net/th/id/OIP-C.Cf95d06LX4ceQ2g4ov8IqwHaFb?pid=ImgDet&rs=1" }
+            }
+            else {
+                button[i].onclick = function () { img.src = "https://tse1-mm.cn.bing.net/th/id/OIP-C.ni_lvOcfnZwXirsAw3PxdAHaHa?pid=ImgDet&rs=1" }
+
+            }
+        }
+    </script>
+</body>
+
+</html>

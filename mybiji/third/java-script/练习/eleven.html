@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src="http://lib.sinaapp.com/js/jquery/1.9.1/jquery-1.9.1.min.js"></script>
+</head>
+
+<body>
+    <div id="hhh">aaa</div>
+    <input type="button" value="嗷嗷嗷" id="btn">
+    <div>
+        <input type="button" onclick="test123();" class="input1" id="testclick" value="test_button" />
+    </div>
+
+    <script>
+        var tag33 = document.getElementById("hhh");
+        console.log(tag33.textContent)
+        console.log(tag33.innerText)
+        console.log(tag33.innerHTML)
+        console.log(tag33.outerText)
+        console.log(tag33.outerHTML)
+        console.dir(tag33)
+        var btn = document.getElementById("btn");
+
+        btn.onclick = function () {
+            alert("你哈");
+            console.log("onclick")
+        }
+
+        btn.click();
+        //js代码
+        $("#testclick").click(function () {
+            console.log("click输出了");
+        });
+
+        function test123() {
+            console.log("onclick输出了");
+        }
+        //结果：onclick输出了
+        // click输出了
+    </script>
+</body>
+
+</html>

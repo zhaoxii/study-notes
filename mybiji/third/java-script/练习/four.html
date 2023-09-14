@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script>
+        var a = [1, 2, 3, 4, 5, 6]
+        console.log(a);
+        console.log(a.length)
+        // for (var i = 0; i < a.length; i++) {
+        //     console.log(a[i])
+        // }
+        function Person(name, age, sex) {
+            this.name = name;
+            this.age = age;
+            this.sex = sex;
+            this.sayHi = function () {
+                alert('我的名字叫：' + this.name + '，年龄：' + this.age + '，性别：' + this.sex);
+            }
+        }
+        var bigbai = new Person('大白', 100, '男');
+        var smallbai = new Person('小白', 21, '男');
+        console.log(bigbai.name);
+        console.log(smallbai.name);
+        console.log(bigbai.age)
+        smallbai.sayHi()
+    </script>
+</head>
+
+<body>
+
+</body>
+
+</html>

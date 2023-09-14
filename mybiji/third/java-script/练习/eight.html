@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script>
+        var arr = [1500, 1200, 2000, 2100, 1800];
+        var newArr = [];
+        for (var i = 0; i < arr.length; i++) {
+            if (arr[i] < 2000) {
+                newArr.push(arr[i]);
+            }
+        }
+
+        console.log(arr)
+        console.log(newArr);
+        console.log(typeof newArr)
+        console.log(Array.isArray(newArr))
+        console.log(arr.length)
+        console.log(arr.push(1, 2, 3, 4, 5, 6))
+        console.log(arr)
+
+        var arr = [1, 64, 9, 6];
+        arr.sort(function (a, b) {
+            return b - a;      // 降a序
+            // return a - b;   // 升序
+        });
+        console.log(arr);
+        console.log(arr.reverse())
+
+
+
+    </script>
+</head>
+
+<body>
+
+</body>
+
+</html>

@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script>
+        var now = new Date();
+        console.log(now)
+        var yes = new Date("2023-3-2 22:00:20");
+        console.log(yes)
+        console.log(yes.getDate())
+        console.log(now.getFullYear());
+        console.log(now.getDay());
+        obj = {
+            name: "zx",
+            age: 22
+        }
+        console.log(obj);
+        console.log(obj.name)
+
+        for (var k in obj) {
+            console.log(k, typeof k);      // 这里的 k 是属性名
+            console.log(obj[k], typeof obj[k]); // 这里的 obj[k] 是属性值
+        }
+
+    </script>
+</head>
+
+<body>
+
+</body>
+
+</html>
