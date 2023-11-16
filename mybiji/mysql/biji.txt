@@ -1736,6 +1736,86 @@ R树
 
 
 
+----------------------------
+可以使用到索引到查询语句：
+
+举个例子：
+创建一张表
+CREATE TABLE person_info(
+    id INT NOT NULL auto_increment,
+    name VARCHAR(100) NOT NULL,
+    birthday DATE NOT NULL,
+    phone_number CHAR(11) NOT NULL,
+    country varchar(100) NOT NULL,
+    PRIMARY KEY (id),
+    KEY idx_name_birthday_phone_number (name, birthday, phone_number)
+);
+
+表中的主键是id列，它存储一个自动递增的整数。所以InnoDB存储引擎会自动为id列建立聚簇索引。
+
+我们额外定义了一个二级索引idx_name_birthday_phone_number，它是由3个列组成的联合索引。
+
+idx_name_birthday_phone_number索引对应的B+树中页面和记录的排序方式就是这样的：
+先按照name列的值进行排序。
+如果name列的值相同，则按照birthday列的值进行排序。
+如果birthday列的值也相同，则按照phone_number的值进行排序。
+
+
+
+1、全值匹配
+如果我们的搜索条件中的列和索引列一致的话，这种情况就称为全值匹配，比方说下面这个查找语句：
+
+SELECT * FROM person_info WHERE name = 'Ashburn' AND birthday = '1990-09-27' AND phone_number = '15123983239';
+
+因为B+树的数据页和记录先是按照name列的值进行排序的，所以先可以很快定位name列的值是Ashburn的记录位置。
+在name列相同的记录里又是按照birthday列的值进行排序的，所以在name列的值是Ashburn的记录里又可以快速定位birthday列的值是'1990-09-27'的记录。
+如果很不幸，name和birthday列的值都是相同的，那记录是按照phone_number列的值排序的，所以联合索引中的三个列都可能被用到。
+
+有的同学也许有个疑问，WHERE子句中的几个搜索条件的顺序对查询结果有什么影响么？
+也就是说如果我们调换name、birthday、phone_number这几个搜索列的顺序对查询的执行过程有影响么？
+比方说写成下面这样：
+SELECT * FROM person_info WHERE birthday = '1990-09-27' AND phone_number = '15123983239' AND name = 'Ashburn';
+答案是：没影响。MySQL有一个叫查询优化器的东东，会分析这些搜索条件并且按照可以使用的索引中列的顺序来决定先使用哪个搜索条件，后使用哪个搜索条件。我们后边儿会有专门的章节来介绍查询优化器，敬请期待。
+
+
+
+
+2、匹配左边的列
+
+其实在我们的搜索语句中也可以不用包含全部联合索引中的列，只包含左边的就行，比方说下面的查询语句：
+SELECT * FROM person_info WHERE name = 'Ashburn';
+SELECT * FROM person_info WHERE name = 'Ashburn' AND birthday = '1990-09-27';
+那为什么搜索条件中必须出现左边的列才可以使用到这个B+树索引呢？比如下面的语句就用不到这个B+树索引么？
+SELECT * FROM person_info WHERE birthday = '1990-09-27';
+
+是的，的确用不到，因为B+树的数据页和记录先是按照name列的值排序的，
+在name列的值相同的情况下才使用birthday列进行排序，也就是说name列的值不同的记录中birthday的值可能是无序的。
+而现在你跳过name列直接根据birthday的值去查找，臣妾做不到呀～
+那如果我就想在只使用birthday的值去通过B+树索引进行查找咋办呢？这好办，你再对birthday列建一个B+树索引就行了
+
+但是需要特别注意的一点是，如果我们想使用联合索引中尽可能多的列，搜索条件中的各个列必须是联合索引中从最左边连续的列。
+比方说联合索引idx_name_birthday_phone_number中列的定义顺序是name、birthday、phone_number，
+如果我们的搜索条件中只有name和phone_number，而没有中间的birthday，比方说这样：
+SELECT * FROM person_info WHERE name = 'Ashburn' AND phone_number = '15123983239';
+这样只能用到name列的索引，birthday和phone_number的索引就用不上了，
+因为name值相同的记录先按照birthday的值进行排序，birthday值相同的记录才按照phone_number值进行排序。
+
+
+3、匹配列前缀
+对于字符串类型的索引列来说，我们只匹配它的前缀也是可以快速定位记录的，
+比方说我们想查询名字以'As'开头的记录，那就可以这么写查询语句：
+SELECT * FROM person_info WHERE name LIKE 'As%';
+
+但是需要注意的是，如果只给出后缀或者中间的某个字符串，比如这样：
+SELECT * FROM person_info WHERE name LIKE '%As%';
+MySQL就无法快速定位记录位置了，因为字符串中间有'As'的字符串并没有排好序，所以只能全表扫描了。
+
+
+
+
+4、匹配范围值
+
+
 
 
 
